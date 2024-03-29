@@ -460,3 +460,81 @@ The traceback for the exception was written to the log file
 
 首先locate这个文件，看重复的文件在什么地方
 
+
+
+# 问题13：工作空间编译不了
+
+## 问题描述：![image-20240328144942795](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240328144942795-1711608596265-1.png)
+
+### 改完工作空间下的功能包的名字，然后编译不了了
+
+## 解决方法：
+
+### 1.删除 `build` 和 `devel` 文件夹，以确保在新的配置下重新构建。
+
+### 2**修改 `CMakeLists.txt` 和 `package.xml`**：
+
+- 确保你的 `CMakeLists.txt` 文件中的项目名称与你的功能包名称一致。
+- 在 `CMakeLists.txt` 中搜索并替换旧的功能包名称，确保所有引用都已更新为新的名称。
+- 在 `package.xml` 文件中更新功能包名称。
+
+### 3**重新构建功能包**：
+
+- 在你的工作空间中运行 `catkin_make` 或 `catkin build` 以重新构建功能包。
+- 如果使用的是 `catkin_tools`，则运行 `catkin clean` 以清理旧的构建文件，然后再次运行 `catkin build`。
+
+
+
+
+
+# 问题14：无法启动仿真launch文件
+
+## 问题描述：![image-20240328155544384](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240328155544384.png)
+
+## 问题分析：
+
+因为跑仿真时代码的话题变为 
+
+```
+发布者订阅者为
+/iris_0/mavros/state
+/iris_0/mavros/local_position/pose
+客户端服务端为
+iris_0/mavros/cmd/arming
+iris_0/mavros/set_mode
+```
+
+可能是launch文件写错了，所以检查一下节点能不能启动（rosrun my_control_lzh pose_control_sim.cpp）
+
+![image-20240329002547530](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240329002547530.png)
+
+## 问题解决：
+
+将话题名字改为仿真的话题
+
+检查launch文件，添加CMakelist文件
+
+## 推广：
+
+#### 若为别人的代码则有可能是没下载功能包
+
+https://img-blog.csdnimg.cn/20210717080225949.png
+
+![在这里插入图片描述](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/20210717080225949.png)
+
+```
+sudo apt-get install ros-melodic（ros版本名）-包名
+```
+
+#### 1.先加权限
+
+#### 2.再加上环境变量
+
+```
+source ~/.bashrc
+```
+
+
+
+
+
