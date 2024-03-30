@@ -528,11 +528,25 @@ sudo apt-get install ros-melodic（ros版本名）-包名
 
 #### 1.先加权限
 
+```
+sudo chmod +x 
+```
+
 #### 2.再加上环境变量
 
 ```
 source ~/.bashrc
 ```
+
+## 其他原因：
+
+CMakelist文件的依赖项没调好：
+
+1.忘在find_package中加入roscpp了
+
+2.添加add_excutive( 可执行文件名字  文件路径)
+
+3.没加入add_libraries(可执行文件名字 )
 
 
 
