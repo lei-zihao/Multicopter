@@ -1,3 +1,11 @@
+mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 200
+
+
+
+
+
+
+
 
 
 <<<<<<< Updated upstream
@@ -182,7 +190,7 @@ catkin_init_workspace
 ### 在 `~/my_ws/src 中` 目录创建一个新包，名为 `offboard_py` (在这种情况下) 依赖 `rospy` ：
 
 ```
-catkin_create_pkg    offboard_py   rospy
+catkin_create_pkg    offboard_py   rospy roscpp
 ```
 
 ## 3、编译（在工作空间my_ws下）
@@ -630,9 +638,39 @@ sudo chmod -R 777 ~/realsense2_camera/
 
 
 
+# 知识点十三：vins的使用（仿真和实际）
+
+    1.启动rviz
+    roslaunch vins vins_rviz.launch
+    
+    2.启动vins里程计（实际）
+    rosrun vins vins_node ~/my_ws/src/VINSFusion/config/vi_car/vi_car.yaml 
+    2.启动vins里程计（仿真）
+    rosrun vins vins_node ~/my_ws/src/VINS-Fusion-gpu/config/euroc/euroc_stereo_imu_config.yaml
+    
+    3.视觉循环闭合（可选）
+    (optional) rosrun loop_fusion loop_fusion_node ~/catkin_ws/src/VINS-Fusion/config/vi_car/vi_car.yaml 
+    
+    4.播放 bag 文件
+    rosbag play YOUR_DATASET_FOLDER/car.bag
 
 
 
+# 知识点十四：控制时间
+
+方法一：cwkj
+
+!(../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161319033.png)![image-20240330161319190](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161319190.png)
+
+方法二：树康师兄
+
+![image-20240330161614752](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161614752.png)
+
+
+
+方法三：官网
+
+![image-20240330163326628](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330163326628.png)
 
 # 无人机代码的使用
 
@@ -667,7 +705,7 @@ rostopic echo /mavros/local_position/pose
 ## **选择节点进行起飞**
 
 ```
-roslaunch example unload.launch
+rosrun my_control_lzh pose_control_sim
 ```
 
 起飞前需解锁GPS，打开遥控器的紧急开关
@@ -688,23 +726,21 @@ roslaunch example vision.launch
 
 1.起飞&降落（悬停10秒 高度1.2米）
 
-rosrun duoji my_control \
-1.2 1 \
+rosrun my_control_lzh pose_control_sim 1.2 1 \
 0 0
 
 2.定位(起飞位置分别设为 (0,0) (1,1) )
 
-rosrun duoji  my_control \
-1.2 1 \
+rosrun my_control_lzh pose_control_sim 1.2 1 \
 0 0
 
-rosrun duoji my_control \
+rosrun my_control_lzh pose_control_sim \
 1.2 1\
 1 1
 
 3.无人机控制测试 挂重物向前飞行1.5米
 
-rosrun duoji my_control \
+rosrun my_control_lzh pose_control_sim \
 1.2 2 \
 0 1.5 \
 0 0
