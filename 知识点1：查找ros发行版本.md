@@ -660,17 +660,54 @@ sudo chmod -R 777 ~/realsense2_camera/
 
 方法一：cwkj
 
-!(../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161319033.png)![image-20240330161319190](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161319190.png)
+!(../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161319033.png)![image-20240330161319190](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240330161319190.png)
 
 方法二：树康师兄
 
-![image-20240330161614752](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330161614752.png)
+![image-20240330161614752](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240330161614752.png)
 
 
 
 方法三：官网
 
-![image-20240330163326628](../../Users/86153/AppData/Roaming/Typora/typora-user-images/image-20240330163326628.png)
+![image-20240330163326628](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240330163326628.png)
+
+
+
+# 知识点十五：编译问题
+
+## 问题描述：在工作空间无法编译c++文件
+
+![image-20240402162651696](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162651696.png)
+
+## 我的已有操作：
+
+1、CMakelist文件添加find_package()中添加geometry_msgs依赖项
+
+2、CMakelist文件添加可执行文件和库
+
+add_executable(pose_control_sim src/pose_control_sim.cpp)
+target_link_libraries(pose_control_sim
+  ${catkin_LIBRARIES}
+)
+
+3、CMakelist文件添加catkin_package中的依赖项geometry_msgs
+
+![image-20240402162457020](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162457020.png)
+
+因为![image-20240402162553709](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162553709.png)
+
+## 问题分析：程序编写错误，不能够在main函数外赋值。可以在main函数外定义全局变量，但得在main函数内赋值
+
+## 解决方法：
+
+将赋值放到函数内部
+
+![image-20240402163154092](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402163154092.png)
+
+
+
+
 
 # 无人机代码的使用
 
