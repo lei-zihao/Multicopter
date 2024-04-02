@@ -558,7 +558,7 @@ CMakelist文件的依赖项没调好：
 
 ## 问题描述：在工作空间无法编译c++文件
 
-![image-20240402162651696](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162651696.png)
+![image-20240402162651696](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240402162651696.png)
 
 ## 我的已有操作：
 
@@ -573,17 +573,21 @@ target_link_libraries(pose_control_sim
 
 3、CMakelist文件添加catkin_package中的依赖项geometry_msgs
 
-![image-20240402162457020](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162457020.png)
+![image-20240402162457020](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240402162457020.png)
 
-因为![image-20240402162553709](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402162553709.png)
+因为
+
+![image-20240402162553709](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240402162553709.png)
 
 ## 问题分析：程序编写错误，不能够在main函数外赋值。可以在main函数外定义全局变量，但得在main函数内赋值
+
+![image-20240402175118252](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240402175118252.png)
 
 ## 解决方法：
 
 将赋值放到函数内部
 
-![image-20240402163154092](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240402163154092.png)
+![image-20240402163154092](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/image-20240402163154092.png)
 
 
 
