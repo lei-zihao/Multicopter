@@ -2,12 +2,6 @@ mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 200
 
 
 
-
-
-
-
-
-
 <<<<<<< Updated upstream
 
 # 知识点1：查找ros发行版本
@@ -634,7 +628,7 @@ roslaunch mavros px4.launch
 sudo chmod -R 777 ~/realsense2_camera/
 ```
 
-# 知识点十二：没有nterRealSenseD435i SDK2和RealSense-ROS就无法打开摄像机，没有camera的话题，rviz中看不到图像。下载完后还要调整rc_camera.launch文件的参数，不然看不到深度图
+# 知识点十二：没有interRealSenseD435i SDK2和RealSense-ROS就无法打开摄像机，没有camera的话题，rviz中看不到图像。下载完后还要调整rc_camera.launch文件的参数，不然看不到深度图
 
 
 
@@ -691,12 +685,16 @@ roslaunch mavros px4.launch
 ## 脚本通信：
 
 ```
-rosrun init_control multi...。py
+rosrun init_control multi....py
 ```
 
 ## 运行视觉定位节点
 
-roslaunch realsense2_camera slam.launch
+```
+roslaunch VINS ipac_drone_
+```
+
+
 
 ## 监听视觉定位信息
 
@@ -753,15 +751,83 @@ rosrun my_control_lzh pose_control_sim \
 
 
 
+# 知识点十五：高飞代码ctrl订阅的编写
+
+```c++
+#第一种：三个参数
+ros::Subscriber state_sub =
+    nh.subscribe<mavros_msgs::State>("/mavros/state",
+				10,                                    				   boost::bind(&State_Data_t::feed, &fsm.state_data, _1));
+
+#第二种：五个参数
+ros::Subscriber odom_sub =
+    nh.subscribe<nav_msgs::Odometry>("odom",
+                 100,                                         		   boost::bind(&Odom_Data_t::feed, &fsm.odom_data, _1),                           						 ros::VoidConstPtr(),                      			   ros::TransportHints().tcpNoDelay());
+```
+
+添加订阅话题eg：/mavros/local_position/pose
+
+1`
+
+```c++
+原版：
+ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>
+        ( "/iris_0/mavros/local_position/pose", 
+        10, 
+        get_pose);
+改：
+ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>
+        ( "/iris_0/mavros/local_position/pose", 
+        10, 
+        boost::bind(&Pose_Data_t::feed, &fsm.Pose_data, _1));   
+```
+
+2`（以下以"/mavros/state"为例）创建构造函数State_Data_t。在input.h中83行
+
+```c++
+class State_Data_t
+{
+public:
+  mavros_msgs::State current_state;
+  mavros_msgs::State state_before_offboard;
+
+  State_Data_t();
+  void feed(mavros_msgs::StateConstPtr pMsg);
+};
+```
+
+3·在input.cpp中添加回调函数定义
+
+```c++
+State_Data_t::State_Data_t()
+{
+}
+
+void State_Data_t::feed(mavros_msgs::StateConstPtr pMsg)
+{
+    current_state = *pMsg;
+}
+```
 
 
 
+## 高飞代码起飞：
 
-
-
-
-
-
+- 自动起飞：
+  - `sh shfiles/rspx4.sh`
+  - `rostopic echo /vins_fusion/imu_propagate`
+  - 拿起飞机进行缓慢的小范围晃动，放回原地后确认没有太大误差
+  - 遥控器5通道拨到内侧，六通道拨到下侧，油门打到中位
+  - `roslaunch px4ctrl run_ctrl.launch`
+  - `sh shfiles/takeoff.sh`，如果飞机螺旋桨开始旋转，但无法起飞，说明`hover_percent`参数过小；如果飞机有明显飞过1米高，再下降的样子，说明`hover_percent`参数过大
+  - 遥控器此时可以以类似大疆飞机的操作逻辑对无人机进行位置控制
+  - 降落时把油门打到最低，等无人机降到地上后，把5通道拨到中间，左手杆打到左下角上锁
+- Ego-Planner实验
+  - 自动起飞
+  - `roslaunch ego_planner single_run_in_exp.launch`
+  - `sh shfiles/record.sh`
+  - 进入远程桌面 `roslaunch ego_planner rviz.launch`
+  - 按下G键加鼠标左键点选目标点使无人机飞行
 
 
 $$
