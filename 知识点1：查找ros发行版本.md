@@ -628,6 +628,8 @@ roslaunch mavros px4.launch
 sudo chmod -R 777 ~/realsense2_camera/
 ```
 
+
+
 # 知识点十二：没有interRealSenseD435i SDK2和RealSense-ROS就无法打开摄像机，没有camera的话题，rviz中看不到图像。下载完后还要调整rc_camera.launch文件的参数，不然看不到深度图
 
 
@@ -751,7 +753,9 @@ rosrun my_control_lzh pose_control_sim \
 
 
 
-# 知识点十五：高飞代码ctrl订阅的编写
+# 知识点十五：高飞代码的理解
+
+## 1.ctrl订阅的编写
 
 ```c++
 #第一种：三个参数
@@ -809,14 +813,130 @@ void State_Data_t::feed(mavros_msgs::StateConstPtr pMsg)
 }
 ```
 
+2.remap的理解：
+
+remap在node之外的作用域是他之后的所有节点，在node中的作用域是当前节点，此外要注意想要remap的话题是这个节点要接收的还是要发布的。
+如果是要remap一个该节点发布的source_topic到target_topic,应该是<remap from="/source_topic" to="/target_topic" />
+如果是要remap一个该节点想要接收的的target_topic，而实际被另外一个节点发布的话题是source_topic,应该是<remap from="/target_topic" to="/source_topic" />
+
+#### 1、remap要发布的话题
+
+节点中通过ros::Publisher发布了base/joint_states，head/joint_states，torso/joint_states，想要把发布出来的话题重映射到joint_states上，可以这么写：
+
+```xml
+<?xml version="1.0"?>
+<launch>
+
+    <group ns="dhrobot">
+        <remap from="base/joint_states" to="joint_states" />
+        <remap from="head/joint_states" to="joint_states" />
+        <remap from="torso/joint_states" to="joint_states" /> 
+        <node name="robot_driver" pkg="dhrobot_driver" type="robot_driver" />
+    </group>
+
+</launch>
+```
+
+rostopic list一下可以看到话题：
+
+> /dhrobot//joint_states
+
+#### ２、remap要接收的话题
+
+节点中通过Ros::Subscriber**想要**接收/image话题，但是实际摄像头发布的话题是/kinect2/hd/image_color，所以需要这样处理：
+
+```xml
+<?xml version="1.0"?>
+<launch>
+   <node name="robot_visual" pkg="dhrobot_demo" type="robot_visual" >
+	<remap from="/image" to="/kinect2/hd/image_color" />  
+  </node>  
+</launch>
+```
+
+### 自己的理解：（核心）
+
+```
+<remap from="目前的话题名" to="我想要的话题名" />
+```
+
+#### 这么理解更方便，无论发布和订阅都适用。节点A发布话题/a，节点B订阅话题/b，现在想通过话题/c联系到一起。对于A，本来该发布/a，现在想发布/c，所以
+
+```
+<remap from="/a" to="c" />
+```
+
+#### 对于B，本来是应该订阅/b，想要改为订阅/c（实际有的）， 
+
+```
+<remap from="/b" to="c" />
+```
+
+#### A已经有/a，想变成/c，B已经有/b，想变成/c（实际有的）。
 
 
-## 高飞代码起飞并避障：
+
+#### 在高飞的run_ctrl.launch代码里就是:（核心）
+
+```
+<remap from="~cmd" to="/position_cmd" />
+```
+
+/position_cmd（**我想要订阅的话题名，即实际话题名**）话题可以rostopic查看到（由ego发出）。而在代码px4ctrl_node.cpp内部自己定义话题为**~cmd（目前的话题名，自己写的**）。故要重映射。
+
+
+
+## 2.高飞代码起飞并避障：
 
 ```
 sh shfiles/rspx4.sh
 roslaunch px4ctrl run_ctrl.launch
 roslaunch ego_planner single_run_in_exp.launch
+```
+
+
+
+代码内容：
+
+1.rspx4.sh（未设置rivz可视化界面）
+
+```
+sudo chmod 777 /dev/ttyACM0 & sleep 2;
+roslaunch realsense2_camera rs_camera.launch & sleep 10;
+roslaunch mavros px4.launch & sleep 10;
+roslaunch vins ipac_drone_330.launch
+wait;
+```
+
+ipac_drone_330.launch（用于启动vins）
+
+```
+<launch>
+  <node name="vins_estimator" pkg="vins" type="vins_node" output="screen" args="$(find vins)/../config/ipac_drone_330.yaml" />
+
+  <node name="loop_fusion" pkg="loop_fusion" type="loop_fusion_node" output="screen" args="$(find vins)/../config/ipac_drone_330.yaml" />
+
+</launch>
+```
+
+
+
+2.run_ctrl.launch
+
+```
+<launch>
+
+	<node pkg="px4ctrl" type="px4ctrl_node" name="px4ctrl" output="screen">
+        	<!-- <remap from="~odom" to="/vicon_imu_ekf_odom" /> -->
+			
+			<remap from="~odom" to="/vins_fusion/imu_propagate" />
+
+		<remap from="~cmd" to="/position_cmd" />
+
+        <rosparam command="load" file="$(find px4ctrl)/config/ctrl_param_fpv.yaml" />
+	</node>
+ 
+</launch>
 ```
 
 
