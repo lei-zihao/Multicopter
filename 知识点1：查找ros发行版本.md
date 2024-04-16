@@ -811,17 +811,25 @@ void State_Data_t::feed(mavros_msgs::StateConstPtr pMsg)
 
 
 
-## 高飞代码起飞：
+## 高飞代码起飞并避障：
+
+```
+sh shfiles/rspx4.sh
+roslaunch px4ctrl run_ctrl.launch
+roslaunch ego_planner single_run_in_exp.launch
+```
+
+
 
 - 自动起飞：
   - `sh shfiles/rspx4.sh`
   - `rostopic echo /vins_fusion/imu_propagate`
   - 拿起飞机进行缓慢的小范围晃动，放回原地后确认没有太大误差
-  - 遥控器5通道拨到内侧，六通道拨到下侧，油门打到中位
+  - 遥控器5通道拨到内侧（进入悬停模式），六通道拨到下侧（防止进入阶段3——控制命令模式），油门打到中位
   - `roslaunch px4ctrl run_ctrl.launch`
   - `sh shfiles/takeoff.sh`，如果飞机螺旋桨开始旋转，但无法起飞，说明`hover_percent`参数过小；如果飞机有明显飞过1米高，再下降的样子，说明`hover_percent`参数过大
   - 遥控器此时可以以类似大疆飞机的操作逻辑对无人机进行位置控制
-  - 降落时把油门打到最低，等无人机降到地上后，把5通道拨到中间，左手杆打到左下角上锁
+  - 降落时把油门打到最低，等无人机降到地上后，把5通道拨到中间（进入手动模式），左手杆打到左下角上锁
 - Ego-Planner实验
   - 自动起飞
   - `roslaunch ego_planner single_run_in_exp.launch`
