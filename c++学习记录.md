@@ -108,3 +108,12 @@ PX4CtrlFSM::PX4CtrlFSM(Parameter_t &param_, LinearControl &controller_) : param(
 在.cpp文件中定义成员函数（可以有回调函数，判断函数），包括构造函数（用于在创建实例时初始化类）
 
 ![image-20240418115553034](C++%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/image-20240418115553034.png)
+
+
+
+
+
+
+
+
+

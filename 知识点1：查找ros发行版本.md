@@ -1,4 +1,7 @@
-mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 200
+mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 210
+
+rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1
+rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1
 
 
 
