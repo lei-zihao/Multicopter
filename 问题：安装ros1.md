@@ -630,3 +630,68 @@ target_link_libraries(pose_control_sim
 ![IMG_2925(20240417-174048)](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/IMG_2925(20240417-174048).JPG)
 
 ![IMG_2905](%E9%97%AE%E9%A2%98%EF%BC%9A%E5%AE%89%E8%A3%85ros1.assets/IMG_2905.JPG)
+
+
+
+
+
+# 问题十七：虚拟机无WiFi
+
+## 文章目录
+
+- - [方法一：网络连接状态排查](https://blog.csdn.net/dong__ge/article/details/123581117#_14)
+  - [方法二：主机网络服务查询](https://blog.csdn.net/dong__ge/article/details/123581117#_40)
+  - [其他解决方法](https://blog.csdn.net/dong__ge/article/details/123581117#_54)
+
+早上刚到公司，打开电脑，远程连接虚拟机，突然发现 `SSH`连接失败！
+
+What，什么情况，打开[虚拟机](https://so.csdn.net/so/search?q=%E8%99%9A%E6%8B%9F%E6%9C%BA&spm=1001.2101.3001.7020)，网络连接的按钮都没了？还报了一堆异常！
+
+![image-20220318091445473](问题：安装ros1.assets/90279ad13424d3c429e5af5f083dbbe2-17138428649837.png)
+
+内心一阵恐慌，这种虚拟机突然崩溃的时候，虽然不经常遇到，一旦碰上，着实烦人。
+
+**基本上，这种情况大多都会遇到，同样导致这样问题可能有很多，在这里记录一下两种解决方案，同时并分享一些其他相同问题的解决方法！**
+
+### 方法一：网络连接状态排查
+
+出现该问题，第一步进行网络状态排查，通常也是最有效的方法之一。
+
+进入 `Ctrl+Alt+T`打开终端，输入以下命令，查看网络状态信息。
+
+```bash
+sudo vim /var/lib/NetworkManager/NetworkManager.state
+```
+
+可以看到，网络状态信息 `NetworkingEnabled=false`，
+
+![image-20220318091818467](问题：安装ros1.assets/bdc9a1a89c40e332ff6b08591c03d755-17138428649849.png)
+
+不知道怎么就被搞成了 `false`，要想修改成 `true`，需要以下步骤：
+
+- **关闭网络服务**：`sudo service network-manager stop`
+- **设置网络状态**：`sudo vim /var/lib/NetworkManager/NetworkManager.state`，设置为 `true`
+- **打开网络服务**：`sudo service network-manager start`
+
+此时，就看到了网络连接成功的标识。
+
+![image-20220318092109152](问题：安装ros1.assets/e118045e5b97ad82d5e23f3e092ced5c.png)
+
+### 方法二：主机网络服务查询
+
+还有另外一个原因，一般是自己的主机把服务给关掉了，或者是因为**电脑管家把这些软件给升级了**，然后把**虚拟机的网路服务给停止**了。
+
+右击 `我的电脑`，然后找到 `管理`\->`服务`，**确保下面虚拟机的网络服务是否打开**，然后虚拟机就有网了。
+
+![img](问题：安装ros1.assets/5dd7cf14405c3126d080e1d1b4f839c4.png)
+
+> 如果你的还没有解决，可以参考以下文章。
+
+### 其他解决方法
+
+[【VMware】虚拟机中Ubuntu无法连接网络的有效解决办法](https://blog.csdn.net/u013554213/article/details/79408084)
+
+[VMware 虚拟机里连不上网的五种解决方案](https://blog.csdn.net/qq_36408196/article/details/103390303)
+
+[VMware 虚拟机无法连接网络解决办法](https://blog.csdn.net/m0_37259197/article/details/78221016)
+
