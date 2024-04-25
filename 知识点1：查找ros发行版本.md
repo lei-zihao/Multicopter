@@ -5,6 +5,20 @@ rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1
 
 
 
+source devel/setup.bash 
+
+```
+sh shfiles/rspx4.sh
+roslaunch px4ctrl run_ctrl.launch
+roslaunch ego_planner single_run_in_exp.launch
+```
+
+rosrun my_control_lzh offboard
+
+
+
+
+
 <<<<<<< Updated upstream
 
 # 知识点1：查找ros发行版本
@@ -665,8 +679,6 @@ sudo chmod -R 777 ~/realsense2_camera/
 
 ![image-20240330161614752](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240330161614752.png)
 
-
-
 方法三：官网
 
 ![image-20240330163326628](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240330163326628.png)
@@ -907,6 +919,10 @@ roslaunch ego_planner single_run_in_exp.launch
 sudo chmod 777 /dev/ttyACM0 & sleep 2;
 roslaunch realsense2_camera rs_camera.launch & sleep 10;
 roslaunch mavros px4.launch & sleep 10;
+#将高飞代码所需的imu频率提高到200
+rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1;
+rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1；
+
 roslaunch vins ipac_drone_330.launch
 wait;
 ```
@@ -961,6 +977,9 @@ ipac_drone_330.launch（用于启动vins）
   - 按下G键加鼠标左键点选目标点使无人机飞行
 
 
+
+
+
 $$
 
 $$
@@ -980,6 +999,12 @@ $$
 ## 方法二：语雀插件  或  markdownload插件（力推）（现主要要第二个Markdownload）
 
 ![image-20240423115342415](知识点1：查找ros发行版本.assets/image-20240423115342415.png)
+
+
+
+
+
+
 
 
 
