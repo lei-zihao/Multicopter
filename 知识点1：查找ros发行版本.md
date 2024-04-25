@@ -1002,9 +1002,219 @@ $$
 
 
 
+# 知识点十七：控制舵机。mix
+
+[【新提醒】px41.6.2—控制Aux Out输出-博客文章-Amovlab阿木实验室-让机器人研发更高效！ -](https://bbs.amovlab.com/forum.php?mod=viewthread&tid=507)
+
+[PX4中混控器Mixer的分析_px4 混控器-CSDN博客](https://blog.csdn.net/u013181595/article/details/84866978)
+
+## 总结：
+
+设置主通道还是辅通道：
+
+![image-20240425223534114](知识点1：查找ros发行版本.assets/image-20240425223534114.png)
+
+![image-20240425223737183](知识点1：查找ros发行版本.assets/image-20240425223737183.png)
+
+## 一个mix代表一个命令（比如pitch，roll，yaw）。mix可控制多个分组（一般都是同一个分组），一个分组一般有八个控制通道（控制pwm），一个通道控制一个电机或舵机。（见如下控制流程）（以第4..5步的例子理解容易一些）
+
+PX4架构保证了核心控制器中不需要针对机身布局做特别处理。混控指的是把输入指令（例如：遥控器打右转）分配到电机以及[舵机](https://so.csdn.net/so/search?q=%E8%88%B5%E6%9C%BA&spm=1001.2101.3001.7020)的执行器（如电调或舵机PWM）指令。对于固定翼的副翼控制而言，每个副翼由一个舵机控制，那么混控的意义就是控制其中一个副翼抬起而另一个副翼落下。同样的，对多旋翼而言，俯仰操作需要改变所有电机的转速。将混控逻辑从实际姿态控制器中分离出来可以大大提高复用性。
+
+### 1 控制流程
+
+一个特定的控制器（如姿态控制器）发送特定的归一化（-1..+1）的命令到给混合（mixing）,然后混合后输出独立的PWM到执行器（电调，舵机等）.在经过输出驱动如（串口，UAVCAN，PWM）等将归一化的值再转回特性的值（如输出1300的PWM等）。如图1所示。
+
+![](知识点1：查找ros发行版本.assets/20181206231628161.png)
+
+### 2 控制组
+
+PX4 有输入组和输出组的概念，顾名思义：控制输入组（如： attitude），就是用于核心的飞行姿态控制，（如： gimbal ）就是用于挂载控制.一个输出组就是一个物理总线，如前8个PWM组成的总线用于舵机控制，组内带8个归一化（-1..+1）值,一个混合就是用于输入和输出连接方式（如:对于四轴来说,输入组有俯仰，翻滚，偏航等，对于于向前打俯仰操作，就需要改变输出组中的4个电调的PWM输出值，前俩个降低转速，后两个增加转速，飞机就向前）。对于简单的固定翼来说，输入0（roll），就直接连接到输出的0（副翼）。对于多旋翼来说就不同了，输入0（roll）需要连接到所有的4个电机。
+
+```cobol
+Control Group #0 (Flight Control)
+
+• 0: roll (-1..1)
+
+• 1: pitch (-1..1)
+
+• 2: yaw (-1..1)
+
+• 3: throttle (0..1 normal range, -1..1 for variable pitch / thrust reversers)
+
+• 4: flaps (-1..1)
+
+• 5: spoilers (-1..1)
+
+• 6: airbrakes (-1..1)
+
+• 7: landing gear (-1..1)
+
+Control Group #1 (Flight Control VTOL/Alternate)
+
+• 0: roll ALT (-1..1)
+
+• 1: pitch ALT (-1..1)
+
+• 2: yaw ALT (-1..1)
+
+• 3: throttle ALT (0..1 normal range, -1..1 for variable pitch / thrust reversers)
+
+• 4: reserved / aux0
+
+• 5: reserved / aux1
+
+• 6: reserved / aux2
+
+• 7: reserved / aux3
+
+Control Group #2 (Gimbal)
+
+• 0: gimbal roll
+
+• 1: gimbal pitch
+
+• 2: gimbal yaw
+
+• 3: gimbal shutter
+
+• 4: reserved
+
+• 5: reserved
+
+• 6: reserved
+
+• 7: reserved (parachute, -1..1)
+
+Control Group #3 (Manual Passthrough)
+
+• 0: RC roll
+
+• 1: RC pitch
+
+• 2: RC yaw
+
+• 3: RC throttle
+
+• 4: RC mode switch
+
+• 5: RC aux1
+
+• 6: RC aux2
+
+• 7: RC aux3
+
+Control Group #6 (First Payload)
+
+• 0: function 0 (default: parachute)
+
+• 1: function 1
+
+• 2: function 2
+
+• 3: function 3
+
+• 4: function 4
+
+• 5: function 5
+
+• 6: function 6
+
+• 7: function 7
+```
+
+### 3 混控文件的定义
+
+ROMFS/px4fmu\_common/mixers中的文件实现了预定义机架所使用的混控器。它们可以用于自定义机架或者一般的测试。
+
+#### 3.1 语法
+
+mixer通过文本文件定义；以单个大写字母加一个冒号开始的行是有效的。其它的行则会被忽略，这意味着注释可以自由地在定义中穿插使用。  
+每个文件可以定义多个混控器；混控器与作动器的分配关系由读取混控器定义的设备决定，作动器输出数目则由混控器决定。  
+例如：每个简单混控器或者空混控器按照它们在混控器文件中出现的顺序对应到输出1到输出x。一个混控器定义通常具有如下形式：  
+<tag>: <mixer arguments>  
+tag标签决定混控器的类型；M对应简单求和混控器，R对应多旋翼混控器，等等。
+
+#### 3.2 空混控器
+
+空混控器不接受控制输入并产生单个作动器输出，其输出值恒为零。空混控器的典型用法是在一组定义作动器特定输出模式的混控器组中占位。空混控器定义形式如下：  
+Z:
+
+#### 3.3 简单混控器
+
+```
+对应的语法，官网上《Mixing and Actuators》有详细解释，这里给出简单的解释
+
+​    M: <control count>
+
+​    O: <-ve scale> <+vescale> <offset> <lower limit> <upper limit>
+
+​    S: <group> <index><-ve scale> <+ve scale> <offset> <lower limit><upper limit>
+
+​    一组M: + O：代表一组通道，S：语法定义了该通道与控制组的关系，例如在AUX1上S: 3 5 ****就是把AUX1通道映射到了控制组3的5号变量上，根据官网给出的控制组3定义如下，把AUX1映射给了RC aux1变量。
+```
+
+简单混控器将0个或多个控制输入混合为单个作动器输出。所有输入被缩放后，经过混合函数得到混合后的输入，最后再经过输出缩放产生输出信号。简单混控器定义如下：  
+
+```
+详细解释
+M: <control count>  
+O: <-ve scale> <+ve scale> <offset> <lower limit> <upper limit>  
+如果 <control count> 为0，那么混合结果实际上为0，混控器将输出一个定值，这个值是在<lower limit>和<upper limit>限制下的<offset>。第二行用前文讨论过的缩放参数定义了输出缩放器。计算以浮点操作被执行，存储在定义文件中的值经过了因子10000的缩放，即偏移量-0.5会被存储为-5000。紧跟在<control count>词目之后的定义描述了控制输入以及它们的缩放，形式如下：  
+S: <group> <index> <-ve scale> <+ve scale> <offset> <lower limit> <upper limit>  
+<group>值标示了控制输入来源，缩放器从中读取控制量，<index>值则是控制量在组内的序号。这些值对读取混控器定义的设备而言都是特定的。当用来混合载体控制时，控制组0是载体姿态控制组，序号0到3通常对应滚转，俯仰，偏航和油门。混控器定义行中剩下的域则用来配置缩放器，参数如前文讨论。计算以浮点操作被执行，存储在定义文件中的值经过了因子10000的缩放，即偏移量-0.5会被存储为-5000。  
+```
 
 
 
+
+### 4 固定翼混控的简单分析
+
+分析一下固定翼Wing Wing Z-84的混控器设计，机型如图2所示。它的混控文件为wingwing.main.mix。这个机型只有左右副翼和一个电机。
+
+![](知识点1：查找ros发行版本.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTMxODE1OTU=,size_16,color_FFFFFF,t_70.png)
+
+其中左右副翼的链接**输出**通道的0和1，电机链接输出通道3，对于输出通道2则闲置。**输入**通道来源于分组group_0(飞机姿态)，分组group_0中，Roll、Pitch、thrust分别对于0,1,3（这里好像不支持Yaw的控制）。混控器的设置由图3所示。由于左右两个舵机在物理上是反向的，所以对于Pitch的输入也需要做反向处理。
+
+混控文件是这样的
+
+![](知识点1：查找ros发行版本.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTMxODE1OTU=,size_16,color_FFFFFF,t_70-17140545262701.png)
+
+混控器中第一行
+
+M:2表示输出0需要对下面两个通道的的输入做简单的加法混控。
+
+O:      10000  10000      0 -10000  10000代表负值正值的缩放比例都为1000，偏置为0，最大最小输出范围为-10000到10000。
+
+后面两行S开头的代表需要做混控的输入，第一行是对输入Roll的处理，第二行是对输入Pitch的处理。同理第二个M:2是混控得到输出1。
+
+举个简单的例子，Roll的输入为0，加入当前Pitch的输入为0.1。执行前两个混控后，得到的输出为，通道0的输出为650，通道1的输出为-650，按理说对Pitch的控制，两个副翼的角度应该是一样的，但是因为两个舵机在以上的安放位置相反，所以输出也相反。  
+对于通道3的输出就只有油门了，对油门进行缩放即可。
+
+### 5 多旋翼混控的简单分析
+
+多旋翼的的混控那最简单的四轴X模式来分析，先分析混控文件，如图4所示。四周的混控文件非常简单，R: 4x 10000 10000 10000 0表示的意思为，R：旋翼混控器，4x：四轴X模式，后面的3个10000是Roll、Pitch、Yaw的缩放比例，0为死区范围。而后面的两个混控器是准备别的辅助通道混控，Roll、Pitch、Yaw的混控并不在这个混控文件里面，因为四轴一个电机的输出和Roll、Pitch、Yaw、thrust都有关系，所以四轴的混控在mixer\_multirotor.cpp中完成。
+
+![](知识点1：查找ros发行版本.assets/20181206232057140.png)
+
+对于不同的旋翼机型会定义不同的混控数组，四轴X模式的数组如图5所示。其中每一行对应一个电机的输出，每一列对于Roll、Pitch、Yaw、Thrust的输入。
+
+![](知识点1：查找ros发行版本.assets/20181206232110948.png)
+
+在mixer\_multirotor.cpp文件中会先计算先根据Roll、Pitch的输入计算出混控器的输出，然后根据电机是否饱和缩放后，再次加入Yaw叫输入的混控，最后加入油门的混控。
+
+### 6 饱和的处理
+
+处理的代码如下图
+
+![](知识点1：查找ros发行版本.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTMxODE1OTU=,size_16,color_FFFFFF,t_70-17140545262712.png)
+
+1 根据混控矩阵计算得到out，这一步已经包含油门，同时记录下最大输出和最小输出，outputs保存四个电机的输出值。
+
+2 第一种情况，min小于0，max大于0，min，max之差小于1，可以通过偏移解决。加油油门增加幅度大于|min|，可以通过增加油门的方式解决，boost = -min\_out;如果油门增加幅度太小，需要把roll和pitch的缩小后再计算。
+
+举个例子，当前thrust为0.2，计算得到新的输出值之后，min为-0.2,max为0.6，roll和pitch带来转速上的变化是0.4，由于只计算了Roll和Pitch，所以在旋翼里面，min和max到thrust的距离一定是一样的。这种情况就是第一种情况，并且油门增大幅度为0.2\*0.5=0.1，不足以平衡min的大小。需要对Roll和Pitch进行缩放。计算得到boost=0.1，roll\_pitch\_scale=0.75，然后再计算下面的代码。可以知道min=0，max=0.6，没有饱和。
+
+![](知识点1：查找ros发行版本.assets/20181206232234871.png)
 
 
 
