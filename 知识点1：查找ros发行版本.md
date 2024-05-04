@@ -1218,3 +1218,198 @@ O:      10000  10000      0 -10000  10000代表负值正值的缩放比例都为
 
 
 
+
+
+# 知识点十八：mavros话题
+
+##### 订阅的话题
+
+## 1 /mavros/imu/data_raw`和`/mavros/imu/data
+
+### 有两个imu数据，`/mavros/imu/data_raw`和`/mavros/imu/data`，前者没有orientation数据，后者有，通过解算四元数数据我们可以获取到姿态角。只不过我的测试结果显示，imu解算得到的姿态角漂移很大。
+
+```text
+# 查看话题的发布频率
+rostopic hz /mavros/imu/data_raw
+
+# 调整发布频率 /mavros/imu/data_raw  100hz
+rosrun mavros mavcmd long 511 105 10000 0 0 0 0 0
+
+# 调整发布频率 /mavros/imu/data   100hz
+rosrun mavros mavcmd long 511 31 10000 0 0 0 0 0
+```
+
+## 2  /mavros/local_position/pose
+
+mavro中发布的global_postion和local_positon等相关的话题的数据，都是**通过融合GPS数据获取得到的**，所以获取到GPS数据是很重要的一步，最好去空旷的室外。其中的`/mavros/local_position/pose`发布的数据为**以GPS上电时刻为原点而建立的NED坐标系的位置数据和四元数数据**。(这里不对NED坐标系进行介绍)
+
+
+
+**发布话题**  
+
+## 1、/mavros/setpoint\_position/local  
+
+功能：发布指点飞行，当前坐标系为local当地坐标系，即以FCU上电为原点的ENU坐标系（东北天）
+
+数据类型：geometry\_msgs/PoseStamped
+
+```c
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+geometry_msgs/Pose pose
+  geometry_msgs/Point position  //local 坐标系下的位置（xyz），只有 position 成员变量生效
+    float64 x
+    float64 y
+    float64 z
+  geometry_msgs/Quaternion orientation
+    float64 x
+    float64 y
+    float64 z
+    float64 w
+```
+
+#### QGC下观测
+
+这个信息在QGC下mavlink检测台上可以看到是：position_target_local_ned
+里面的x, y，z 就是上面的/mavros/set point_positon/local
+但是Vx,Vy,Vz 是px4内部控制输出的；
+
+![img](知识点1：查找ros发行版本.assets/a39a12c882a54fecaa2372e4d6ab5945-17147977035802.png)
+
+## 2、/mavros/setpoint\_raw/attitude  
+
+功能：设置**无人机姿态、角速度和推力**(遥控器)
+
+数据类型：mavros\_msgs/AttitudeTarget
+
+```c
+uint8 IGNORE_ROLL_RATE=1
+uint8 IGNORE_PITCH_RATE=2
+uint8 IGNORE_YAW_RATE=4
+uint8 IGNORE_THRUST=64
+uint8 IGNORE_ATTITUDE=128
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint8 type_mask
+geometry_msgs/Quaternion orientation // 四元数姿态
+  float64 x
+  float64 y
+  float64 z
+  float64 w
+geometry_msgs/Vector3 body_rate // 角速度，坐标系测试貌似是body坐标系
+  float64 x
+  float64 y
+  float64 z
+float32 thrust // 推力
+```
+
+使用示例：
+
+```c
+// 依赖的库文件有：mavros、roscpp、geometry_msgs
+
+// 1.头文件需要
+#include <ros/ros.h>
+#include <mavros_msgs/AttitudeTarget.h>
+
+// 2.订阅话题
+ros::Publisher thrust_pub = nh.advertise<mavros_msgs::AttitudeTarget>
+			("/mavros/setpoint_raw/attitude",10);
+// 3.创建消息
+mavros_msgs::AttitudeTarget thrust_msg;
+thrust_msg.thrust = 0.7;
+thrust_msg.body_rate.y = 1;
+
+// 4.发布话题	
+thrust_pub.publish(thrust_msg);
+ros::spinOnce();
+```
+
+## 3、/mavros/setpoint\_raw/local  
+
+功能：设置无人机目标位置  
+数据类型：mavros\_msgs/PositionTarget
+
+```c
+uint8 FRAME_LOCAL_NED=1
+uint8 FRAME_LOCAL_OFFSET_NED=7
+uint8 FRAME_BODY_NED=8
+uint8 FRAME_BODY_OFFSET_NED=9
+uint16 IGNORE_PX=1
+uint16 IGNORE_PY=2
+uint16 IGNORE_PZ=4
+uint16 IGNORE_VX=8
+uint16 IGNORE_VY=16
+uint16 IGNORE_VZ=32
+uint16 IGNORE_AFX=64
+uint16 IGNORE_AFY=128
+uint16 IGNORE_AFZ=256
+uint16 FORCE=512
+uint16 IGNORE_YAW=1024
+uint16 IGNORE_YAW_RATE=2048
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint8 coordinate_frame
+uint16 type_mask
+geometry_msgs/Point position
+  float64 x
+  float64 y
+  float64 z
+geometry_msgs/Vector3 velocity
+  float64 x
+  float64 y
+  float64 z
+geometry_msgs/Vector3 acceleration_or_force
+  float64 x
+  float64 y
+  float64 z
+float32 yaw
+float32 yaw_rate
+```
+
+使用示例
+
+```c
+// 依赖的库文件有：mavros、roscpp、geometry_msgs
+
+// 1.头文件需要
+#include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <mavros_msgs/PositionTarget.h>
+//创建话题
+    ros::Publisher target_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local",10);
+
+//3、创建消息
+ mavros_msgs::PositionTarget position_home;
+    position_home.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+    position_home.type_mask = mavros_msgs::PositionTarget::IGNORE_VX | 
+                              mavros_msgs::PositionTarget::IGNORE_VY |
+                              mavros_msgs::PositionTarget::IGNORE_VZ |
+                              mavros_msgs::PositionTarget::IGNORE_AFX |
+                              mavros_msgs::PositionTarget::IGNORE_AFY |
+                              mavros_msgs::PositionTarget::IGNORE_AFZ |
+                              mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
+    position_home.position.x = 0;
+    position_home.position.y = 0;
+    position_home.position.z = FLIGHT_ALTITUDE;
+    position_home.velocity.x = 0;
+    position_home.velocity.y = 0;
+    position_home.velocity.z = 0;
+    position_home.acceleration_or_force.x = 0;
+    position_home.acceleration_or_force.y = 0;
+    position_home.acceleration_or_force.z = 0;
+    position_home.yaw = (-45.0f + 90.0f) * PI / 180.0f;
+    position_home.yaw_rate = 0;
+
+    target_local_pub.publish(position_home);
+    ros::spinOnce();
+    rate.sleep();
+```
+
+#### 
