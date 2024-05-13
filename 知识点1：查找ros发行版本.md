@@ -960,6 +960,18 @@ ipac_drone_330.launch（用于启动vins）
 
 
 
+3.运行yolo查看话题
+
+```
+source /home/nvidia/yolo_ros/devel/setup.bash
+cd /home/nvidia/anaconda3/bin
+ . ./activate
+conda activate yolo
+roslaunch yolov5_ros yolov5.launch
+```
+
+
+
 - 自动起飞：
   - `sh shfiles/rspx4.sh`
   - `rostopic echo /vins_fusion/imu_propagate`

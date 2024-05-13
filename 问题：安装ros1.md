@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+
 # 问题1：安装ros1
 
 ## 自动安装ros：wget http://fishros.com/install -O fishros && . fishros。但是ros1安装不了？
@@ -695,3 +696,22 @@ sudo vim /var/lib/NetworkManager/NetworkManager.state
 
 [VMware 虚拟机无法连接网络解决办法](https://blog.csdn.net/m0_37259197/article/details/78221016)
 
+
+
+
+
+# 问题十八：舵机调试
+
+### 1.代码控制不了（未解决）
+
+### 问题描述：有信号输出了，但是是一上电就开始转动（按照正常情况他应该是不动的）
+
+### 原因分析：推测可能是之前代码给他初始化，而后面的代码要用spinones才能调用一次
+
+### 解决思路：试试代码控制量初始化为1，能不能反向转动。
+
+### 2.遥控器控制（必须arm）（已解决）
+
+### 问题描述：用遥控器可以控制IO PWM OUT端口（并不是FMU PWM OUT）。要在arm模式下。自己在QGC中映射一个通道![](问题：安装ros1.assets/image-20240504150821762.png![image-20240504153258806](问题：安装ros1.assets/image-20240504153258806.png)
+
+![image-20240504125952764](问题：安装ros1.assets/image-20240504125952764.png)
