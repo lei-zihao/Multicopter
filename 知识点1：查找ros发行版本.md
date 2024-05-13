@@ -685,7 +685,23 @@ sudo chmod -R 777 ~/realsense2_camera/
 
 
 
+方法一：使用`ros::Duration`类来实现
 
+```
+ros::Duration(30.0).sleep();
+```
+
+方法二：因为`ros::Duration`对象和整数之间没有定义相等比较的操作符。要比较两个`ros::Duration`对象之间的时间间隔是否等于某个值，你需要使用`toSec()`方法将时间间隔转换为秒，然后再进行比较。
+
+```
+ros::Time hover_time = ...; // 假设这是你之前记录的时间点（上一个状态机设置的时间）（做差的时间）
+
+ros::Time now_time = ros::Time::now();
+ros::Duration time_diff = now_time - hover_time;
+if (time_diff.toSec() == 30.0) {
+    // 在这里执行你的操作
+}
+```
 
 
 
