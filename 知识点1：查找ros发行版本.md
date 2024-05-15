@@ -3,6 +3,12 @@ mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 210
 rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1
 rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1
 
+仿真平台
+
+```
+roslaunch px4 mavros_posix_sitl.launch 
+```
+
 
 
 source devel/setup.bash 
@@ -14,6 +20,66 @@ roslaunch ego_planner single_run_in_exp.launch
 ```
 
 rosrun my_control_lzh offboard
+
+
+
+## vins定点飞
+
+打开一个终端运行下面命令
+
+```
+cd ca。。。
+sh shfiles/rspx4.sh
+```
+
+打开一个终端依次运行下面命令
+
+```
+source ~/t265_to_mavros_ws/devel/setup.bash
+rosrun offboard_pkg t265_to_mavros
+```
+
+再打开一个终端多运行下面两条命令
+
+```
+source ~/t265_to_mavros_ws/devel/setup.bash
+roslaunch offboard_pkg setpoint.launch
+```
+
+### 命令启动完成后的操作
+
+在setpoint.launch为默认的没有更改的情况下，上面T265指点命令启动后，先遥控器依次切定点，解锁，切offboard，然后无人机会先自动起飞到0.4米高度，再依次往前飞1米，往左飞1米，往后飞1米，往右飞1米回到起飞点上方，然后自动降落并上锁
+
+```
+rostopic echo
+```
+
+
+
+##### 说明：
+
+setpoint.launch内容如下 参数 height 是设置无人机飞正方形的高度，单位米 参数 side 是设置无人机飞正方形的边长，单位米 参数 auto_arm_offboard 是设置无人机是否自动解锁切offboard，如果值为true，则是setpoint.launch起起来后无人机会自动解锁切offboard然后自动起飞开始飞正方形，如果值为false，则是setpoint.launch起起来后需要先通过遥控器手动解锁切offboard，然后无人机才开始起飞飞正方形。
+
+```
+<launch>
+	
+   <node pkg="offboard_pkg" type="offboard_node" name="offboard_node" output="screen">
+
+   <param name="height"     value="0.4"/>
+   <param name="side"    value="1"/>
+   <param name="auto_arm_offboard"   type="bool"  value="false"/>
+
+   </node>
+</launch>
+```
+
+
+
+
+
+
+
+
 
 
 
@@ -705,85 +771,6 @@ if (time_diff.toSec() == 30.0) {
 
 
 
-# 无人机代码的使用
-
-## 基本通信:启动mavros
-
-舒康师兄的后两个代码是使用了雷达和激光雷达
-
-```
-roslaunch mavros px4.launch
-```
-
-## 脚本通信：
-
-```
-rosrun init_control multi....py
-```
-
-## 运行视觉定位节点
-
-```
-roslaunch VINS ipac_drone_
-```
-
-
-
-## 监听视觉定位信息
-
-rostopic echo /mavros/local_position/pose
-
-**初始化视觉定位**
-
-**此步骤相当关键！！！没有此步骤定位飘的概率将大大增****加**缓慢拿起飞机，缓慢左右移动一下（1、2m即可）再缓慢返回原处此过程期间不要让*t265*视野被遮挡或者有移动的物体或者有强光**持续观察定位信息的xyz**几秒钟，如果一直保持（0,0,0）则说明初始化成功
-
-两位小数之后的值不用在意
-
-## **选择节点进行起飞**
-
-```
-rosrun my_control_lzh pose_control_sim
-```
-
-起飞前需解锁GPS，打开遥控器的紧急开关
-
-
-
-## **视觉识别节点**
-
-打开相机并且检测二维码，识别结果到会输出到屏幕上
-
-```
-roslaunch example vision.launch
-```
-
-![image-20240326204912243](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240326204912243.png)
-
-## 命令规则：起飞高度 坐标数量 x坐标 y坐标
-
-1.起飞&降落（悬停10秒 高度1.2米）
-
-rosrun my_control_lzh pose_control_sim 1.2 1 \
-0 0
-
-2.定位(起飞位置分别设为 (0,0) (1,1) )
-
-rosrun my_control_lzh pose_control_sim 1.2 1 \
-0 0
-
-rosrun my_control_lzh pose_control_sim \
-1.2 1\
-1 1
-
-3.无人机控制测试 挂重物向前飞行1.5米
-
-rosrun my_control_lzh pose_control_sim \
-1.2 2 \
-0 1.5 \
-0 0
-
-
-
 # 知识点十五：高飞代码的理解
 
 ## 1.ctrl订阅的编写
@@ -800,9 +787,7 @@ ros::Subscriber odom_sub =
                  100,                                         		   boost::bind(&Odom_Data_t::feed, &fsm.odom_data, _1),                           						 ros::VoidConstPtr(),                      			   ros::TransportHints().tcpNoDelay());
 ```
 
-添加订阅话题eg：/mavros/local_position/pose
-
-1`
+1`添加订阅话题eg：/mavros/local_position/pose
 
 ```c++
 原版：
@@ -1441,3 +1426,85 @@ float32 yaw_rate
 ```
 
 #### 
+
+# 无人机代码的使用
+
+## 基本通信:启动mavros
+
+舒康师兄的后两个代码是使用了雷达和激光雷达
+
+```
+sudo chmod 777 /dev/ttyACM0
+roslaunch mavros px4.launch
+```
+
+## 脚本通信：
+
+```
+rosrun init_control multi....py
+```
+
+## 运行视觉定位节点
+
+```
+roslaunch VINS ipac_drone_
+```
+
+
+
+## 监听视觉定位信息
+
+rostopic echo /mavros/local_position/pose
+
+**初始化视觉定位**
+
+**此步骤相当关键！！！没有此步骤定位飘的概率将大大增****加**缓慢拿起飞机，缓慢左右移动一下（1、2m即可）再缓慢返回原处此过程期间不要让*t265*视野被遮挡或者有移动的物体或者有强光**持续观察定位信息的xyz**几秒钟，如果一直保持（0,0,0）则说明初始化成功
+
+两位小数之后的值不用在意
+
+## **选择节点进行起飞**
+
+```
+rosrun my_control_lzh pose_control_sim
+```
+
+起飞前需解锁GPS，打开遥控器的紧急开关
+
+
+
+## **视觉识别节点**
+
+打开相机并且检测二维码，识别结果到会输出到屏幕上
+
+```
+roslaunch example vision.launch
+```
+
+![image-20240326204912243](%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20240326204912243.png)
+
+## 命令规则：起飞高度 坐标数量 x坐标 y坐标
+
+1.起飞&降落（悬停10秒 高度1.2米）
+
+rosrun my_control_lzh pose_control_sim 1.2 1 \
+0 0
+
+2.定位(起飞位置分别设为 (0,0) (1,1) )
+
+rosrun my_control_lzh pose_control_sim 1.2 1 \
+0 0
+
+rosrun my_control_lzh pose_control_sim \
+1.2 1\
+1 1
+
+3.无人机控制测试 挂重物向前飞行1.5米
+
+rosrun my_control_lzh pose_control_sim \
+1.2 2 \
+0 1.5 \
+0 0
+
+
+
+# 

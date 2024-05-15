@@ -715,3 +715,234 @@ sudo vim /var/lib/NetworkManager/NetworkManager.state
 ### 问题描述：用遥控器可以控制IO PWM OUT端口（并不是FMU PWM OUT）。要在arm模式下。自己在QGC中映射一个通道![](问题：安装ros1.assets/image-20240504150821762.png![image-20240504153258806](问题：安装ros1.assets/image-20240504153258806.png)
 
 ![image-20240504125952764](问题：安装ros1.assets/image-20240504125952764.png)
+
+
+
+# 问题十九：用vins来定点(位置模式）飞行
+
+## 问题描述：无法切入offboard模式，无法进入位置模式
+
+### 进入位置模式
+
+1.提供位姿代码
+先让/mavros/local_position/pose的值和/mavros/vision_pose/pose的值基本一样
+
+要自己写一个代码来转化数据即如果用视觉的话要将视觉估计的位姿传给mavros节点。即让飞控可以订阅到/mavros/local_position/pose（有数据）。
+
+解决方法：用vins或者t265来把定位信息传给飞控。订阅视觉的imu数据/vins_estimator/odometry或 并转化为posestamped类型。然后通过/mavros/vision_pose/pose发布pose。
+
+![image-20240515205653481](问题：安装ros1.assets/image-20240515205653481.png)
+
+![img](问题：安装ros1.assets/O[XPZCR{M2XD3V%6U2F`CW.png)
+
+2.需要的功能包
+
+要想用让飞控接收到/mavros/vision_pose/pose发布的pose。还要下载按照功能包
+
+```
+sudo apt-get install ros-noetic-mavros-extras
+```
+
+这样mavros就看可以接收到/mavros/vision_pose/pose发布的话题了。
+
+### 进入offboard模式（命令和频率）
+
+1.还要发布命令信息才能进入offboard模式
+
+即一般都是要发布其目标点位置命令。但是想要从offboard切换land模式时：1先退出offboard模式，然后land模式。2加一个判断标识变量bool型。当赋值为true时，不发布命令指令（退出offboard模式）。
+
+```c++
+int offboard_flag = 0; // 防止切land降落之后又去解锁切offboard
+在循环里
+if (!offboard_flag) {
+        local_pos_pub.publish(pose);
+    }
+```
+
+2.保证发布目标位姿的频率不低于2hz
+
+即最好不用ros::duritio（10.0）.sleep()。通过添加一个bool类型的hovering变量来控制悬停。
+
+```c++
+if ((abs(position[0]) < 0.2 && abs(position[1]) < 0.2 && abs(position[2] - HEIGHT) < 0.2))
+{
+    if (!hovering)
+    {
+        ROS_INFO("Hovering at (%f, %f, %f)", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+        hovering = true;
+        hover_start_time = ros::Time::now();
+    }
+    else if (ros::Time::now() - hover_start_time > ros::Duration(30.0))
+    {
+        ROS_INFO("Hover complete. Moving to next position.");
+        hovering = false;
+        pose.pose.position.x = SIDE;
+        pose.pose.position.y = 0;
+        pose.pose.position.z = HEIGHT;
+        last_request = ros::Time::now();
+    }
+}
+```
+
+
+
+### 代码案例:
+
+确保无人机在起飞到 `(0, 0, HEIGHT)` 位置时悬停30秒，之后不再悬停，而是直接移动到 `(SIDE, 0, HEIGHT)`，再移动回到 `(0, 0, HEIGHT)`，最后降落。
+
+```c++
+#include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <mavros_msgs/CommandBool.h>
+#include <mavros_msgs/SetMode.h>
+#include <mavros_msgs/State.h>
+
+mavros_msgs::State current_state;
+double position[3] = {0, 0, 0};
+
+void state_cb(const mavros_msgs::State::ConstPtr &msg) {
+    current_state = *msg;
+}
+
+void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg) {
+    position[0] = msg->pose.position.x;
+    position[1] = msg->pose.position.y;
+    position[2] = msg->pose.position.z;
+}
+
+int main(int argc, char **argv) {
+    ros::init(argc, argv, "offb_node");
+    ros::NodeHandle nh;
+    ros::NodeHandle nh1("~");
+    float HEIGHT;
+    float SIDE;
+    bool AUTO_ARM_OFFBOARD;
+    nh1.param<float>("height", HEIGHT, 0.65);
+    nh1.param<float>("side", SIDE, 1.5);
+    nh1.param<bool>("auto_arm_offboard", AUTO_ARM_OFFBOARD, false);
+
+    ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, state_cb);
+    ros::Subscriber position_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pos_cb);
+    ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+    ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
+    ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
+
+    // the setpoint publishing rate MUST be faster than 2Hz
+    ros::Rate rate(20.0);
+
+    // wait for FCU connection
+    while (ros::ok() && !current_state.connected) {
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    geometry_msgs::PoseStamped pose;
+    pose.pose.position.x = 0;
+    pose.pose.position.y = 0;
+    pose.pose.position.z = HEIGHT;
+
+    // send a few setpoints before starting
+    for (int i = 100; ros::ok() && i > 0; --i) {
+        local_pos_pub.publish(pose);
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    mavros_msgs::SetMode offb_set_mode;
+    offb_set_mode.request.custom_mode = "OFFBOARD";
+
+    mavros_msgs::SetMode land_set_mode;
+    land_set_mode.request.custom_mode = "AUTO.LAND";
+
+    mavros_msgs::CommandBool arm_cmd;
+    arm_cmd.request.value = true;
+
+    int offboard_flag = 0; // 防止切land降落之后又去解锁切offboard
+    bool hovering = false;
+    bool moved_to_next_position = false;
+    bool moved_back_to_start = false;
+    ros::Time hover_start_time;
+
+    ros::Time last_request = ros::Time::now();
+
+    while (ros::ok()) {
+        if (AUTO_ARM_OFFBOARD) {
+            if (current_state.mode != "OFFBOARD" &&
+                (ros::Time::now() - last_request > ros::Duration(5.0)) && (offboard_flag == 0)) {
+                if (set_mode_client.call(offb_set_mode) &&
+                    offb_set_mode.response.mode_sent) {
+                    ROS_INFO("Offboard enabled");
+                }
+                last_request = ros::Time::now();
+            } else {
+                if (!current_state.armed &&
+                    (ros::Time::now() - last_request > ros::Duration(5.0)) && (offboard_flag == 0)) {
+                    if (arming_client.call(arm_cmd) &&
+                        arm_cmd.response.success) {
+                        ROS_INFO("Vehicle armed");
+                    }
+                    last_request = ros::Time::now(); // 可以通过这个方式保持当前指点持续几秒钟。
+                }
+            }
+        }
+
+        // Hover for 30 seconds after reaching the initial position
+        if ((abs(position[0]) < 0.2 && abs(position[1]) < 0.2 && abs(position[2] - HEIGHT) < 0.2) && !hovering && !moved_to_next_position) {
+            ROS_INFO("Hovering at (%f, %f, %f)", pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+            hovering = true;
+            hover_start_time = ros::Time::now();
+        }
+
+        // Check if hover time is over
+        if (hovering && (ros::Time::now() - hover_start_time > ros::Duration(30.0))) {
+            ROS_INFO("Hover complete. Moving to next position.");
+            hovering = false;
+            moved_to_next_position = true;
+            pose.pose.position.x = SIDE;
+            pose.pose.position.y = 0;
+            pose.pose.position.z = HEIGHT;
+            last_request = ros::Time::now();
+        }
+
+        // Move to the next position
+        if (moved_to_next_position && (abs(position[0] - SIDE) < 0.2 && abs(position[1]) < 0.2 && abs(position[2] - HEIGHT) < 0.2)) {
+            ROS_INFO("Reached next position. Moving back to start.");
+            moved_to_next_position = false;
+            moved_back_to_start = true;
+            pose.pose.position.x = 0;
+            pose.pose.position.y = 0;
+            pose.pose.position.z = HEIGHT;
+            last_request = ros::Time::now();
+        }
+
+        // Move back to the start position
+        if (moved_back_to_start && (abs(position[0]) < 0.2 && abs(position[1]) < 0.2 && abs(position[2] - HEIGHT) < 0.2)) {
+            ROS_INFO("Back to start position. Initiating landing.");
+            moved_back_to_start = false;
+            if (set_mode_client.call(land_set_mode) && land_set_mode.response.mode_sent) {
+                ROS_INFO("Landing enabled");
+                offboard_flag = 1;
+            }
+        }
+
+        // Publish the position setpoint if not in landing mode
+        if (!offboard_flag) {
+            local_pos_pub.publish(pose);
+        }
+
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    return 0;
+}
+```
+
+
+
+
+
+
+
+
+
