@@ -23,12 +23,23 @@ rosrun my_control_lzh offboard
 
 
 
+## YOLO启动
+
+```
+cd /home/nvidia/anaconda3/bin
+ . ./activate
+conda activate yolo
+roslaunch yolov5_ros yolov5.launch
+```
+
+
+
 ## vins定点飞
 
 打开一个终端运行下面命令
 
 ```
-cd ca。。。
+cd ca
 sh shfiles/rspx4.sh
 ```
 
