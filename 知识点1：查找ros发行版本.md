@@ -1904,3 +1904,47 @@ ps -a
 ```
 
 ![image-20240528114431564](知识点1：查找ros发行版本.assets/image-20240528114431564.png)
+
+
+
+# 知识点二十二：Tmux的使用
+
+## 编辑
+
+<prefix>  e用编辑器打开配置文件（默认vim)~/.tmux.conf. local
+<prefix> r重新加载配置文件.
+
+C-l清空屏幕
+
+### 会话
+
+·<prefix>  C-c创建新的会话
+.<prefix>  C-f查找会话并切换会话
+
+### 窗口
+
+<prefix> C-h和<prefix C-l切换Window
+
+<prefix> Tab返回上一个激活的Window- 
+
+<prefix> -水平切分窗格
+
+<prefix> _垂直切分窗格
+<prefix> h ,<prefix> j, <prefix>k and <prefix> l使用vim来导航窗格.
+
+<prefix> H,<prefix> J, <prefix> K,<prefix>L调整窗格的大小
+<prefix> +最大化当前窗格为window.
+
+<prefix> m打开或者关闭鼠标模式
+
+
+
+- 杀死会话
+
+  ```
+  tmux kill-session -t <session-name>
+  ```
+
+- `Ctrl+b x`：关闭当前窗格。当所有窗格都被关闭后，就会关闭会话
+
+- `Ctrl+b $`：重命名当前会话。
