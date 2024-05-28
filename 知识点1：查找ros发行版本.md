@@ -1939,12 +1939,39 @@ C-l清空屏幕
 
 
 
+会话
+
+- 接入会话	
+     ```bash
+     # 使用会话编号
+      tmux attach -t 0
+        
+     # 使用会话名称
+      tmux attach -t <session-name>
+- 新建会话	
+
+    ```bash
+    tmux new -s <session-name>
+    ```
+
 - 杀死会话
 
-  ```
+  ```bash
   tmux kill-session -t <session-name>
   ```
 
 - `Ctrl+b x`：关闭当前窗格。当所有窗格都被关闭后，就会关闭会话
 
 - `Ctrl+b $`：重命名当前会话。
+
+窗口
+
+- `Ctrl+b {`：当前窗格与上一个窗格交换位置。
+- `Ctrl+b }`：当前窗格与下一个窗格交换位置。
+
+- `Ctrl+b c`：创建一个新窗口，状态栏会显示多个窗口的信息。
+- `Ctrl+b p`：切换到上一个窗口（按照状态栏上的顺序）。
+- `Ctrl+b n`：切换到下一个窗口。
+- `Ctrl+b <number>`：切换到指定编号的窗口，其中的`<number>`是状态栏上的窗口编号。
+- `Ctrl+b w`：从列表中选择窗口。
+- `Ctrl+b ,`：窗口重命名。
