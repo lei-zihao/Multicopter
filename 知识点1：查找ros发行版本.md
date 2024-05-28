@@ -1518,4 +1518,256 @@ rosrun my_control_lzh pose_control_sim \
 
 
 
-# 
+# 知识点十九：Ubuntu 的包管理工具 apt
+
+## 一、Ubuntu 的包管理工具 apt
+
+___
+
+#### 过去，[软件通常是从源代码安装的](https://itsfoss.com/install-software-from-source-code/ "软件通常是从源代码安装的")，安装步骤为：
+
+1.  在Github上下载该软件的源码文件；
+2.  查看Github上这个软件项目中提供的自述文件（通常包含配置脚本或 makefile 文件），看看这个软件想要运行，需要哪些其他的软件组件；
+3.  在本地的终端窗口中运行提供的配置脚本，下载依赖项，配置好本体软件的运行环境；
+4.  这一切做好后对下载的源码文件进行编译，即可正确安装和运行目标软件；
+
+#### 
+
+#### 举例（以安装 ROS 中的一个仿真软件为例）：
+
+1.在 [Github](https://so.csdn.net/so/search?q=Github&spm=1001.2101.3001.7020) 中搜索 wpr\_simulation ，进入项目空间；
+
+2.复制源码连接，下载源码到本地的 catkin\_ws/src [文件夹](https://so.csdn.net/so/search?q=%E6%96%87%E4%BB%B6%E5%A4%B9&spm=1001.2101.3001.7020)下；
+
+```bash
+git clone https://github.com/6-robot/wpr_simulation.git
+```
+
+3. 下载后我们发现在项目文件夹 catkin\_ws/src/wpr\_simulation 下有一个文件夹 scripts ，这个文件夹是一个脚本文件夹，需要使用里面的脚本 install\_for\_noectic.sh 完成对依赖[软件包](https://so.csdn.net/so/search?q=%E8%BD%AF%E4%BB%B6%E5%8C%85&spm=1001.2101.3001.7020)的安装和环境配置；
+
+```bash
+cd catkin_ws/src/wpr_simulation/scripts/
+
+./install_for_noectic.sh
+```
+
+4.在 ～/catkin\_ws 下 使用 catkin\_make 命令编译整个项目；
+
+```bash
+cd ~/catkin_ws/
+
+catkin_make
+```
+
+___
+
+#### 为了摆脱这种复杂性，Linux 各个发行版创建了自己的打包格式：
+
+-   [Linux 发行版之间的](https://itsfoss.com/what-is-linux/ "Linux 发行版之间的")主要区别之一是包管理，Ubuntu 的包管理工具就是 apt ，为最终用户提供用于安装软件的即用型二进制文件（已经预编译的软件）以及一些[元数据](https://www.computerhope.com/jargon/m/metadata.htm?ref=itsfoss.com "元数据")（版本号、描述）和依赖项；
+-   软件包管理工具 apt 在 Ubuntu 的本地维护着一个源列表文件，源列表文件里面都是一些网址信息，每一条网址就是一个软件源，而每一个软件源里面有无数个打包好的软件包；
+-   如果想通过 apt 安装软件，那么终端会逐条读取源列表文件中的网址（软件源），看哪个软件源里面有我们需要的软件包；
+
+#### 
+
+#### 安装步骤简化为仅使用一行命令即可安装软件：
+
+```bash
+sudo apt-get install <package_name>
+```
+
+-   apt 已经将所需的软件的依赖项，元数据和软件本体全部打包好了，形成了一个以目的软件名作为软件包名的软件包；
+-   且这个软件包中的内容都是经过了预编译的，安装上以后不需要人为安装依赖项/编译，就可以直接使用；
+
+> 注意：/var/cache/apt/archives 目录是在用 apt install 安装软件时，软件包的临时存放路径；
+
+___
+
+> 关于 apt 安装和源码安装的优劣势：
+> 
+> -   apt软件包管理工具优点在于方便，缺点在于如果我们想对软件的源码进行修改，则是不可能的，因为通过 apt 下载下来的软件包都是预编译好的，都是二进制文件，无法查看源码；
+> -   这就是通过源码安装软件的好处，可以对源码文件进行修改，然后再编译，就可以实现对软件功能的修改和定制；
+
+> 补充：
+> 
+> -   apt 在本地维护的源列表文件地址：
+> 
+> ```bash
+> /etc/apt/sources.list
+> ```
+> 
+> -   可以使用文本编辑器 gedit 打开并查看：（有清华源/中科大源 ... 可用）
+> 
+> ```bash
+> sudo gedit /etc/apt/sources.list
+> ```
+
+___
+
+>  **总结：**
+> 
+> -   **简单来说，包管理器是一个允许用户在操作系统上安装、删除、升级、配置和管理软件包的工具；通过这个包管理器可以方便的对所有软件包安装 / 卸载 / 更新 ...**
+> -   **软件包管理工具 apt 在 Ubuntu 的本地维护着一个源列表文件，源列表文件里面都是一些网址信息，每一条网址就是一个软件源，而每一个软件源里面有无数个打包好的软件包；**
+> -   **如果想通过 apt 安装软件，那么终端会逐条读取源列表文件中的网址（软件源），看哪个软件源里面有我们需要的软件包；**
+
+
+
+## 二、apt 和 dpkg 之间的区别
+
+___
+
+#### 相同点：
+
+-   apt 与 dpkg 均为 ubuntu 下面的包管理工具；
+
+#### 不同点1：
+
+-   apt 主要用于远程安装软件包（从远程仓库搜索包的名字，下载并安装）；
+-   dpkg 仅用于安装本地软件包（软件包的后缀都是.deb）；
+-   apt 安装软件包时会自动安装依赖包，配置好环境（apt 是 dpkg 的封装，同时具备了软件源相关的功能，有一定的自动处理依赖关系的能力）；
+-   dpkg 安装软件包时不会安装依赖包，不能解决依赖问题；
+
+```bash
+sudo apt install <package_name>
+
+sudo dpkg -i <package_name>.deb
+```
+
+#### 不同点2：
+
+-   apt 包管理工具存放信息的位置：
+
+```bash
+var/lib/dpkg/available 文件的内容是软件包的描述信息, 该软件包括当前系统所使用的Debian 安装源中的所有软件包,其中包括当前系统中已安装的
+
+和未安装的软件包.
+
+/etc/apt/sources.list 记录软件源的地址（当你执行 sudo apt-get install xxx 时，Ubuntu 就去这些站点下载软件包到本地并执行安装）
+
+/var/cache/apt/archives 已经下载到的软件包都放在这里（用 apt-get install 安装软件时，软件包的临时存放路径）
+
+/var/lib/apt/lists 使用 apt-get update命令会从 /etc/apt/sources.list 中下载软件列表，并保存到该目录。
+```
+
+-   dpkg 包管理工具存放信息的位置：
+
+```bash
+/etc/dpkg/dpkg.cfg dpkg包管理软件的配置文件
+
+/var/log/dpkg.log dpkg包管理软件的日志文件
+
+/var/lib/dpkg/available 存放系统所有安装过的软件包信息
+
+/var/lib/dpkg/status 存放系统现在所有安装软件的状态信息
+
+/var/lib/dpkg/info 记安装软件包控制目录的控制信息文件
+```
+
+#### 不同点3：
+
+-   dpkg 安装软件包时是绕过了 apt 对软件包进行操作，所以用 dpkg 安装过的软件包用 apt 可以再安装一遍，系统不知道之前安装过了，将会覆盖之前 dpkg 的安装；
+
+
+
+## 三、命令 apt update 和 apt upgrade 的功能
+
+___
+
+#### sudo apt update 执行过程：
+
+-   连接软件源：这个命令会访问我们维护在 Ubuntu 本地的源列表文件（即 sources.list 文件），逐个访问里面的网址（软件源/软件仓库），读取每个软件仓库中所有软件的信息，有哪些新增的软件包？或者哪些已有软件包的新版本？
+-   更新本地的软件包列表：将这些信息全部存储在本地的 /var/lib/apt/lists 目录下（该文件夹内存储的是软件包列表）；就是更新这个文件夹里面的内容，添加新软件包的描述信息 / 对有了新版本的旧软件包的描述信息的更改；
+-   检查可用更新：当本地的软件包列表文件更新完成，这个命令就会将本地 Ubuntu 上已经安装的软件包的版本信息和本地的软件包列表（即 lists 文件夹）中的信息交叉对比，以此来确定哪些软件包有新版本可用；
+
+> 注意1：文件夹 lists 的内容是从所有软件源读取到的所有软件包的描述信息（版本信息/依赖信息 / 下载地址），不管是当前系统中已安装的软件包或是未安装的软件包；
+> 
+> 注意2：这个命令只是更新我们在本地存储的描述信息，而不会更新任何一个软件包，也不会安装任何一个软件包；
+
+#### sudo apt update 执行结果：
+
+![](知识点1：查找ros发行版本.assets/4e815d6e67664629879f96ca79ef0e56.png)
+
+-   命中：意味着该软件源网址自上次访问以来里面的软件包信息没有更改，因此它被认为是最新的并且不需要再次下载；
+-   获取：在某个软件源网址内 下载了新软件包的描述信息 / 更新了旧软件包的描述信息；
+-   忽略：就是指这个软件源网站无更新 / 更新无关紧要；
+
+___
+
+#### sudo apt update 执行过程：
+
+-   检查可用更新：这个命令会把本地已安装的软件，与刚下载的软件列表里对应软件地址的软件进行对比，如果发现已安装的软件版本太低 / 某些软件需要其他新软件包作为依赖，就会提示你选择 Y/N ，然后对本地安装的软件进行更新 / 安装新依赖项；
+-   更新/安装软件：如果你的软件都是最新版本，会提示：升级了 0 个软件包，新安装了 0 个软件包，要卸载 0 个软件包，有 0 个软件包未被升级；
+
+#### sudo apt update 执行结果：
+
+![](知识点1：查找ros发行版本.assets/1e479a45e2954d56bd5c37d82c76abf2.png)
+
+___
+
+> **总结：**
+> 
+> -   **update 的作用：`update` 命令只会获得系统上所有包的最新信息，并不会下载或者安装任何一个包；**
+> -   **upgrade 的作用：`apt upgrade` 命令是用来把这些包下载和升级到最新版本；**
+
+
+
+## 四、apt 和 apt-get 命令之间的区别
+
+___
+
+有许多和 APT 包管理工具交互的命令如 `apt-get`、`apt`、`dpkg`、`aptitude` 等；下面重点讨论这些命令中 `update` 和 `upgrade` 选项的区别；
+
+___
+
+#### apt update vs apt-get update：
+
+-   `apt-get update` 和 `apt update` 做的是同样的事，都是更新软件列表的描述信息，这样的话你的系统就知道有哪些包的版本是有更新的 / 有哪些新推出的软件包；从技术上讲，其实并没有本质区别，只有一点小小的细节上的区别；
+-   `apt update` 在一个方面比 `apt-get update` 做的好，它会告诉你可升级的包的数量；而`apt-get update` 不会告诉你有多少包可以升级；
+
+![](知识点1：查找ros发行版本.assets/f49a72efd97b4d93aeb939f8765a5893.png)
+
+sudo apt-get update 的输出
+
+![](知识点1：查找ros发行版本.assets/cd937882c6fc4e06b2b7606f3c3ef928.png)
+
+sudo apt update 的输出
+
+-   从 `apt` 中可以看到 [列出可升级的包](https://itsfoss.com/apt-list-upgradable/ "列出可升级的包")，而 `apt-get` 没有这个选项；
+
+```cobol
+# apt list --upgradable
+
+Listing... Done
+
+fprintd/jammy-updates 1.94.2-1ubuntu0.22.04.1 amd64 [upgradable from: 1.94.2-1]
+
+gnome-control-center-data/jammy-updates,jammy-updates 1:41.7-0ubuntu0.22.04.4 all [upgradable from: 1:41.7-0ubuntu0.22.04.1]
+
+gnome-control-center-faces/jammy-updates,jammy-updates 1:41.7-0ubuntu0.22.04.4 all [upgradable from: 1:41.7-0ubuntu0.22.04.1]
+
+gnome-control-center/jammy-updates 1:41.7-0ubuntu0.22.04.4 amd64 [upgradable from: 1:41.7-0ubuntu0.22.04.1]
+
+libpam-fprintd/jammy-updates 1.94.2-1ubuntu0.22.04.1 amd64 [upgradable from: 1.94.2-1]
+
+vivaldi-stable/stable 5.4.2753.40-1 amd64 [upgradable from: 5.4.2753.37-1]
+```
+
+___
+
+#### apt upgrade vs apt-get upgrade：
+
+-   `apt-get upgrade` 和 `apt upgrade` 命令根据本地的软件列表中保存的软件包的描述信息，安装可升级包的最新版本；
+-   `apt upgrade` 命令可以升级 Linux 内核版本，`apt-get upgrade` 不能；`apt-get` 命令需要使用 [apt-get dist-upgrade](https://itsfoss.com/apt-get-upgrade-vs-dist-upgrade/ "apt-get dist-upgrade") 来升级内核版本；这是因为升级内核版本意味着安装一个全新的包，`apt-get upgrade` 命令不能安装一个新的包，它只能升级现有的包；
+
+![](知识点1：查找ros发行版本.assets/50871dbb508e4a999ceef2a9cca158aa.png)
+
+-   `apt upgrade` 比 `apt-get` 做的好的另一件小事是它会在底部显示一个进度条；
+    
+
+![](知识点1：查找ros发行版本.assets/90badef9849f4904b8ffe93cb41797dc.png)
+
+___
+
+参考文章：[apt 的 update 和 upgrade 命令的区别是什么？-51CTO.COM](https://www.51cto.com/article/717893.html "apt 的 update 和 upgrade 命令的区别是什么？-51CTO.COM")
+
+___
+
