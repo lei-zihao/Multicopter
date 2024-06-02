@@ -21,6 +21,12 @@ roslaunch ego_planner single_run_in_exp.launch
 
 rosrun my_control_lzh offboard
 
+舵机试验
+
+```
+rosrun rc_override_node rc_override_node
+```
+
 
 
 ## YOLO启动
@@ -43,7 +49,7 @@ cd ca
 sh shfiles/rspx4.sh
 ```
 
-打开一个终端依次运行下面命令
+打开一个终端依次运行下面命令（位姿态转换）
 
 ```
 source ~/t265_to_mavros_ws/devel/setup.bash
