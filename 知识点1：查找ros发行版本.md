@@ -21,7 +21,7 @@ roslaunch ego_planner single_run_in_exp.launch
 
 rosrun my_control_lzh offboard
 
-舵机试验
+舵机试验（不行）
 
 ```
 rosrun rc_override_node rc_override_node
@@ -60,7 +60,7 @@ rosrun offboard_pkg t265_to_mavros
 
 ```
 source ~/t265_to_mavros_ws/devel/setup.bash
-roslaunch offboard_pkg setpoint.launch
+roslaunch offboard_pkg setpoint_1.launch
 ```
 
 ### 命令启动完成后的操作
@@ -934,14 +934,14 @@ roslaunch ego_planner single_run_in_exp.launch
 1.rspx4.sh（未设置rivz可视化界面）
 
 ```
-sudo chmod 777 /dev/ttyACM0 & sleep 2;
+sudo chmod 777 /dev/ttyACM0 & sleep 3;
 roslaunch realsense2_camera rs_camera.launch & sleep 10;
 roslaunch mavros px4.launch & sleep 10;
-#将高飞代码所需的imu频率提高到200
 rosrun mavros mavcmd long 511 105 5000 0 0 0 0 0 & sleep 1;
-rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1；
-
-roslaunch vins ipac_drone_330.launch
+rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1;
+roslaunch vins ipac_drone_330.launch & sleep 1;
+source ~/t265_to_mavros_ws/devel/setup.bash & sleep 1;
+rosrun offboard_pkg t265_to_mavros
 wait;
 ```
 
@@ -1246,7 +1246,13 @@ O:      10000  10000      0 -10000  10000代表负值正值的缩放比例都为
 
 ![](知识点1：查找ros发行版本.assets/20181206232234871.png)
 
+## 自己的操作：
 
+![image-20240604155907400](知识点1：查找ros发行版本.assets/image-20240604155907400.png)
+
+![image-20240604155833328](知识点1：查找ros发行版本.assets/image-20240604155833328.png)
+
+通过`/mavros/actuator_control`话题控制。group为2
 
 
 

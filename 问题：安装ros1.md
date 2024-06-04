@@ -942,32 +942,216 @@ int main(int argc, char **argv) {
 
 
 
-# 问题十九：robocup比赛记录
 
 
+# 问题二十：ros功能包所用opencv版本与ros默认opencv版本不一致情况解决方法_ros查看opencv版本
+
+> ## Excerpt
+> 下面camke命令中，CMAKE_INSTALL_PREFIX指定了安装路径，OPENCV_EXTRA_MODULES_PATH指定了opencv_contrib的路径，注意确保opencv_contrib和opencv处于同一个文件夹内，下面OPENCV_EXTRA_MODULES_PATH指定的相对路径才有效。将opencv编译生成的build文件路径加入到cv_bridge功能包的CMakeLists.txt里，命令如下，像上面自己编译安装的opecv3.3.1的build文件夹路径就是。_ros查看opencv版本
+
+---
+## ros功能包所用[opencv](https://so.csdn.net/so/search?q=opencv&spm=1001.2101.3001.7020)版本与ros默认opencv版本不一致情况解决方法
+
+这种情况包含比如：  
+在ubuntu20.04 ros noetic opencv4的环境下部署opencv3的功能包  
+在ubuntu20.04 ros foxy opencv4的环境下部署opencv3.4.1的功能包（比如部署[ros2](https://so.csdn.net/so/search?q=ros2&spm=1001.2101.3001.7020)的vins-fusion-gpu时）  
+在ubuntu18.04 ros melodic opencv3.3.1的环境下部署opencv3.4.1的功能包（比如部署vins-fusion-gpu时）
+
+解决的关键是使得功能包所调用的cv\_bridge功能包是寻找链接的我们想指定的opencv版本，由于ROS功能包一般都是默认用的装ROS时自动二进制安装的cv\_bridge功能包，导致默认情况下，ROS功能包就都是使用的同一个版本的opencv，也就是这个二进制安装的cv\_bridge功能包所原本找到并链接的opencv，如果我们有功能包需要使用特定版本的opencv，没法使用ros现在默认链接的opencv，此时功能包编译运行便会出现问题，比如opencv4的环境下想用opencv3的功能包，或者opencv3.3.1的环境下想用只能适配于opencv3.4.1的vinsfusiongpu，解决办法就是自己源码编译安装一个cv\_bridge（如果是ROS2注意源码编译安装ROS2版本的cv\_bridge），使得此cv\_bridge使用我们指定版本的opencv，同时使我们的功能包使用我们源码编译安装的这个cv\_bridge，就可以实现功能包找到并编译链接的我们指定版本的opencv了。
+
+这里以在ubuntu20.04 opencv4的环境下部署原本依赖opencv3.3.1的功能包为例
+
+首先源码编译安装opencv3.3.1和opencv\_contrib3.3.1，这里假设功能包也需要opencv\_contrib。  
+新建一个文件夹opencv331来专门存放opencv3.3.1和opencv\_contrib3.3.1
+
+```bash
+mkdir opencv331
+
+cd opencv331
+```
+
+然后运行下面命令下载opencv3.3.1和opencv\_contrib3.3.1
+
+```cobol
+git clone -b 3.3.1 https://github.com/opencv/opencv.git
+
+git clone -b 3.3.1 https://github.com/opencv/opencv_contrib
+```
+
+接着编译安装  
+下面camke命令中，CMAKE\_INSTALL\_PREFIX指定了安装路径，OPENCV\_EXTRA\_MODULES\_PATH指定了opencv\_contrib的路径，注意确保opencv\_contrib和opencv处于同一个文件夹内，下面OPENCV\_EXTRA\_MODULES\_PATH指定的相对路径才有效。
+
+```cobol
+cd opencv
+
+mkdir build
+
+cd build
+
+cmake -D CMAKE_BUILD_TYPE=Release -D WITH_CUDA=OFF -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ..
+
+make -j8
+
+sudo make install
+```
+
+此时[ubuntu](https://so.csdn.net/so/search?q=ubuntu&spm=1001.2101.3001.7020)环境里面可以找到opencv4也可以找到opencv3
+
+查找opencv3版本命令可以用
+
+```lua
+pkg-config --modversion opencv
+```
+
+查找opencv4版本命令可以用
+
+```lua
+pkg-config --modversion opencv4
+```
+
+此时单纯地把功能包的cmakelists里面的find\_package(OpenCV REQUIRED)改为find\_package(OpenCV 3.3.1 REQUIRED)是不够的，这样虽然可以找到opencv3.3.1，但是编译链接时会依旧链接的opencv4的库文件，因为ubuntu20.04上ros noetic二进制安装的cv\_bridge默认链接的是opencv4，这样编译一般会出现譬如undefined reference to cv::mat::mat()一类带有undefined的报错，出现这种undefined的报错一般是因为找到了头文件，但是链接库的时候没有链接库或者没有找到库导致的，因为头文件一般只有函数的声明，库文件才带有函数的定义实现。
+
+![输入图片说明](问题：安装ros1.assets/4a1f1f4b1fa64558131d3cae0c9bc795.jpeg)
+
+可以cmakelists里面加上这些打印，会发现虽然找到的是opencv3.3.1，但是链接的库还是opencv4的
+
+```erlang
+message(STATUS "OpenCV library status:")
+
+message(STATUS " version: ${OpenCV_VERSION}")
+
+message(STATUS " libraries: ${OpenCV_LIBS}")
+
+message(STATUS " include path: ${OpenCV_INCLUDE_DIRS}")
+
+message(STATUS " catkin libraries: ${catkin_LIBRARIES}")
+```
+
+![输入图片说明](问题：安装ros1.assets/c06934e97d6d514e8f0918762d62bf02.jpeg)
+
+此时需要自己再另外编码编译安装一个cv\_bridge，之前系统二进制安装的cv\_bridge不用卸载，只需要保证自己的功能包找到的cv\_bridge功能包是源码编译安装的cv\_bridge功能包即可。实现这个的操作就是自己功能包的cmakelists里面加上`set(cv_bridge_DIR "your-path/cv_bridge_ws/devel/share/cv_bridge/cmake")` 。
+
+按照下面操作源码编译部署一个cv\_bridge，使得这个cv\_bridge是调用的opencv3.3.1，同时自己这个功能包是找到的这个源码编译的cv\_bridge，而不是系统二进制安装的cv\_bridge就可以了。
+
+ros1下源码编译安装cv\_bridge
+
+```bash
+mkdir -p cv_bridge_ws/src
+
+cd cv_bridge_ws/src
+
+git clone https://gitee.com/maxibooksiyi/cv_bridge
+
+cd ..
+```
+
+将opencv编译生成的build文件路径加入到cv\_bridge功能包的CMakeLists.txt里，命令如下，像上面自己编译安装的opecv3.3.1的build文件夹路径就是`~/opencv331/opencv/build`
+
+```csharp
+set(OpenCV_DIR "your-path/opencv-x.x.x/build")
+```
+
+编译
+
+```undefined
+catkin_make
+```
+
+如果是ros2，则源码编译安装cv\_bridge功能包的步骤是
+
+```cobol
+mkdir cv_bridge_ros2_ws/src
+
+cd cv_bridge_ros2_ws
+
+cd src
+
+git clone https://github.com/ros-perception/vision_opencv.git -b foxy
+```
+
+把cv\_bridge功能包里的cmakelists（/cv\_bridge\_ros2\_ws/src/vision\_opencv/cv\_bridge/CMakeLists.txt）里这里的OpenCV 4改为OpenCV 3  
 
 
+![输入图片说明](问题：安装ros1.assets/3ddd5cc359cdeeaf04c7ed9153e21d01.png)
 
-我们用纯视觉定位的方案对这次打robocup比赛来说很困难的（主要是因为飘）。现在可以保底拿到21分（当时远程连接卡住了，浪费了挺多时间，好多功能还没测试完）。但是在了解到他们现场比赛基本上都改用mid360激光雷达加光流后，我们打算再冲一下得分，不热难搞。
-目前情况：
-1、我们在现场调vins的时候数据是发散的，他始终没有收敛到一个固定的值。而在海大会收敛到一个值。因为现场的特征点太少，光线太暗。
-2、去年的分数低是因为去年他们用的大部分都是视觉定位t265，大部分都炸机因为之前robocup比赛都是线上，自己布置场地，可以多放二维码来增加特征点，所以t265杀疯了。但是去年第一年改线下，线下光线不好，纹理不清，大部分都飘了，导致大部分队伍t265炸机了。所以去年的分数会偏低。而今年有去年参赛经验的队伍都改用mid360雷达加光流方案了（去年的前几名都是用这个的）
-3、刚刚调试的时候，有位老师说他今天观察了大部分队伍，用纯视觉的基本上都炸了一下。我们运气好，没有太飘，可能是因为我们桨叶没装桨叶保护，怕伤害到别人，和无人机炸机，所以调试时飞的比较保险稳妥。
-4、我们这次比赛打算冲一下分数吧。现在可以保底拿到21分。但是在了解到他们改用mid360加光流后，我们打算再冲一下得分。
-未来打算：
-
-补
-
-1、因为目前比赛还没看到有做纯视觉的（（因为现场环境可能不太友好），未来比赛可能也要加个激光雷达，使用navigation功能包来建图定位。
-2、无人机的避障功能可能得另选方案部署并应用
-3、加个螺旋桨保护罩
+![输入图片说明](问题：安装ros1.assets/62a4d139074ae94cc37e6952950f9f19.png)
 
 
+改完后保存编译
 
-1、视觉这个方案对于打比赛来说很有点吃亏（更适合理论研究和仿真），还是要换mid360激光雷达。
-2、学习到一种快速修改变量的方法（写个配置文件，launch时导入）和sh文件编写
-遇到的问题：
-1、比赛当天飞控参数莫名变化。第一次起飞还好，第二次无法起飞（原因是加速度计飘了，要重新校准）。
-2、遥控器多次断连。怀疑遥控器天线的原因。
+```erlang
+cd ..
 
-3·对这个比赛来说，调试时可以凌晨来偷偷和国防科技大学、西北工业大学的一起偷偷调试（但对视觉的有影响，灯光原因）
+colcon build
+```
+
+源码编译部署完cv\_bridge功能包之后，最后将依赖使用指定opencv版本的功能包里的**CMakeLists.txt**文件按照下面命令添加opencv路径以及cv\_bridge路径，位置放在OpenCV和cv\_bridge的find\_package之前即可，这样再编译这个功能包就会链接的是所指定版本的opencv，而不是原来ros默认链接的opencv了。
+
+```csharp
+set(OpenCV_DIR "your-path/opencv-x.x.x/build")
+
+set(cv_bridge_DIR "your-path/cv_bridge_ws/devel/share/cv_bridge/cmake")
+```
+
+## 代码全部：OpenCv4.6.0和cv\_bridge安装（gpu）
+
+#### 1、opencv安装
+
+移动至指定目录
+
+```
+cd ~/IPAC-drone/doc/
+sudo mv ./opencv-4.6.0/ /usr/local/
+sudo mv ./opencv_contirb-4.6.0/ /usr/local/
+cd /usr/local/opencv-4.6.0/
+```
+
+确定安装路径，我的是CMAKE\_INSTALL\_PREFIX=/usr/local
+
+开始编译
+
+```
+sudo mkdir build &amp;&amp; cd build
+sudo cmake -D CMAKE_BUILD_TYPE=RELEASE \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-4.6.0/modules \
+        -D WITH_CUDA=ON \
+        -D CUDA_ARCH_BIN=8.7 \
+        -D CUDA_ARCH_PTX="" \
+        -D ENABLE_FAST_MATH=ON \
+        -D CUDA_FAST_MATH=ON \
+        -D WITH_CUBLAS=ON \
+        -D WITH_LIBV4L=ON \
+        -D WITH_GSTREAMER=ON \
+        -D WITH_GSTREAMER_0_10=OFF \
+        -D WITH_QT=ON \
+        -D WITH_OPENGL=ON \
+        -D CUDA_NVCC_FLAGS="--expt-relaxed-constexpr" \
+        -D WITH_TBB=ON \
+        -D CUDA_SDK_ROOT_DIR=/usr/local/cuda-11.4/ \
+        ..
+sudo make
+sudo make install
+```
+
+#### 2、cv\_bridge配置
+
+创建cv\_bridge专属的工作空间
+
+```
+mkdir cv_bridge_460/src
+cd ~/cv_bridge_460/src
+```
+
+将cv\_bridge移动到专属工作空间
+
+```
+cp ~/IPAC-drone/doc/cv_bridge ~/cv_bridge_460/src
+```
+
+编译
+
+```
+cd ~/cv_bridge_460/
+catkin_make
+```
