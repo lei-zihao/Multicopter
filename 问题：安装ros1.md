@@ -1359,10 +1359,6 @@ python detect.py --source ./data/images/ --weights weights/yolov5s.pt
 pip install rospkg
 ```
 
-#### 小结
-
-ros以及yolov5的环境已经配置完毕，各位可按照此教程进行配置，如有问题可在评论区提问。关于这块内容，博主也是踩过非常多的坑，也希望各位若遇到问题应当耐心将其解决。下一节，将对项目功能包进行介绍，并对代码开源。
-
 #### 参考资料
 
 1.  [Ubuntu18.04安装Anaconda(最新最全亲测图文并茂)](https://blog.csdn.net/KIK9973/article/details/118772450?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167722683316782429799602%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=167722683316782429799602&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-3-118772450-null-null.142%5Ev73%5Econtrol,201%5Ev4%5Eadd_ask,239%5Ev2%5Einsert_chatgpt&utm_term=anaconda%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8Bubuntu18.04&spm=1018.2226.3001.4187)
