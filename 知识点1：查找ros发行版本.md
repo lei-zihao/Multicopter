@@ -120,6 +120,12 @@ printenv | grep ROS
 
 
 
+一键安装ros
+
+```
+wget http://fishros.com/install -O fishros && . fishros
+```
+
 
 
 

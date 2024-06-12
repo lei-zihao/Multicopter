@@ -1155,3 +1155,218 @@ cp ~/IPAC-drone/doc/cv_bridge ~/cv_bridge_460/src
 cd ~/cv_bridge_460/
 catkin_make
 ```
+
+
+
+# 问题二十一：从零开始的机械臂yolov5抓取gazebo仿真（环境搭建篇中）_melodic yolo-CSDN博客
+
+
+
+### [yolov5](https://so.csdn.net/so/search?q=yolov5&spm=1001.2101.3001.7020)运行环境搭建
+
+本篇主要讲如何搭建yolov5运行环境，以及一些需要注意避坑的重要知识点。anaconda与[显卡驱动](https://so.csdn.net/so/search?q=%E6%98%BE%E5%8D%A1%E9%A9%B1%E5%8A%A8&spm=1001.2101.3001.7020)先装后装是没有什么影响的，关键在于，不能将显卡驱动以及cuda装在虚拟环境中。这里介绍一下博主的电脑环境为i7九代+ubuntu18.04+ros-melodic+gtx1660ti显卡，渣渣神舟笔记本。当然各位配置是越高越好哈，渣本训练个模型快要报废了。
+
+#### 显卡驱动以及cuda安装
+
+在博主之前发的文章中有提到显卡驱动的安装方法：[gazebo版本升级以及环境太暗的解决方法](https://blog.csdn.net/qq_48427527/article/details/124459006?spm=1001.2014.3001.5502)，然而这样的方法其实也有一些问题，那就是使用
+
+```
+sudo ubuntu-drivers autoinstall 
+```
+
+自动下载命令下载的显卡驱动，是适配你显卡的最佳驱动，并不一定能够下载到你需要的驱动，最好的方式还是得手动安装。
+
+##### 避坑提醒！！！
+
+一开始博主的显卡驱动为470对应安装的cuda版本为11.4，然而在使用gpu版pytorch基于yolov5训练模型时发现loss曲线呈一条直线，且无法训练模型，为解决该问题又跳了许多坑，网上也没有很好的解决方案，无奈博主只能重新安装显卡驱动以及cuda，卸载原先的cuda真的是一门技术活，给博主留下了难忘的回忆，希望各位能够及时避坑。
+
+##### 安装cuda10.2版本
+
+为什么安装cuda10.2版本呢，因为该版本比较稳定且支持pytorch1.8，由显卡驱动与cuda版本对应表[显卡驱动与cuda版本对应表](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html)中我们可以发现cuda10.2版本对应的显卡驱动为440且该驱动支持博主的gtx1660ti显卡。![请添加图片描述](问题：安装ros1.assets/1500c53fa94b4c09bb7d7985f9d46a42.png)  
+接下去就是在官网下载对应的驱动以及cuda了，打开官网[cuda各版本下载库](https://developer.nvidia.cn/cuda-toolkit-archive)，选择并点击cuda10.2版本
+
+![请添加图片描述](问题：安装ros1.assets/8f2f620880cf40e993ee21f731e36802.png)  
+进入安装链接，依次选择你自己电脑对应的环境，博主的选择如下  
+![请添加图片描述](问题：安装ros1.assets/7f6fdaecea254c88a6bd780de3f3c730.png)  
+接着就出现了如下安装命令，依照如下命令安装即可。
+
+```
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin
+sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda-repo-ubuntu1804-10-2-local-10.2.89-440.33.01_1.0-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu1804-10-2-local-10.2.89-440.33.01_1.0-1_amd64.deb
+sudo apt-key add /var/cuda-repo-10-2-local-10.2.89-440.33.01/7fa2af80.pub
+sudo apt-get update
+sudo apt-get -y install cuda
+```
+
+安装完成后，打开终端，输入`nvcc -V`
+
+出现如下显示，则说明cuda10.2安装完毕。
+
+![请添加图片描述](问题：安装ros1.assets/145a1a5c823f4eab899b4c3d02aee793.png)  
+接着输入`nvidia-smi`，你会发现对应的显卡驱动也装好了。
+
+![请添加图片描述](问题：安装ros1.assets/bf39a273b8754450a0c4b63f58901f8f.png)  
+安装完成后，还需将如下代码写进.bashrc文件中，并`source .bashrc`文件
+
+```
+export PATH=/usr/local/cuda-10.2/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-10.2/lib64\
+${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+```
+
+![请添加图片描述](问题：安装ros1.assets/7c96c2e3a1504228ab6c7528aafba2e3.png)
+
+#### anaconda3环境配置
+
+Anaconda 是一个用于科学计算的 Python 发行版,支持 Linux, Mac, Windows, 包含了众多流行的科学  
+计算、数据分析的 Python 包。安装anaconda是因为要将pytorch安装至conda环境中，因为ros-melodic默认使用的是python2.7，虽然可以将默认使用python改为3.6版本，但是这样一来，会对ros的正常使用造成影响，且conda可自由配置python环境，因此将pytorch安装在conda环境中是最为合理的方案。
+
+其实anaconda安装配置这一块网上的教程不少，这块各位可以酌情参考。
+
+##### 安装anaconda
+
+1.  先去官方地址下载好对应的安装包（还有可去清华镜像站下载，具体可看参考文献部分）  
+    下载地址:[https://www.anaconda.com/download/#linux](https://www.anaconda.com/download/#linux)
+2.  然后安装anaconda
+
+```
+bash ~/Downloads/Anaconda3-2021.05-Linux-x86_64.sh
+```
+
+anaconda会自动将环境变量添加到PATH里面,如果后面你发现输入conda提示没有该命令,那么  
+你需要执行命令 source ~/.bashrc 更新环境变量,就可以正常使用了。  
+如果发现这样还是没用,那么需要添加环境变量。  
+编辑~/.bashrc 文件,在最后面加上
+
+```
+export PATH=/home/bai/anaconda3/bin:$PATH
+```
+
+注意:路径应改为自己机器上的路径  
+保存退出后执行: `source ~/.bashrc`  
+再次输入 `conda list` 测试看看,应该没有问题。
+
+##### 添加anaconda国内镜像配置
+
+清华TUNA提供了 Anaconda 仓库的镜像,运行以下三个命令:
+
+```
+conda config --add channels
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+conda config --set show_channel_urls yes
+```
+
+##### 创建conda[虚拟环境](https://so.csdn.net/so/search?q=%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83&spm=1001.2101.3001.7020)
+
+这里我创建了一个python3.8的虚拟环境，用于安装pytorch1.8以及适配yolov5-6.1版本
+
+```
+创建虚拟环境
+conda create -n 虚拟环境的名字 python=3.8(python版本自己决定)
+创建完后激活环境
+conda activate 之前设定的虚拟环境的名字
+关闭环境
+conda deactivate 之前设定的虚拟环境的名字
+```
+
+下面是一些用于conda环境的命令
+
+```
+激活虚拟环境
+conda activate 虚拟环境的名字
+退出激活环境
+conda deactivate
+删除环境
+conda renove -n 虚拟环境的名字 --all
+查看当前所有的虚拟环境
+conda env list
+查看虚拟环境中下载的包
+conda list
+```
+
+#### pytorch1.8安装
+
+进入pytorch官网查看安装对应自身cuda的pytorch版本，pytorch官网[https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/)，找到cuda10.2对应的pytorch1.8版本  
+![请添加图片描述](问题：安装ros1.assets/aa4f2f63630d44c9b996faebc2cf4d99.png)  
+打开终端，激活conda环境
+
+```
+conda activate 虚拟环境的名字
+输入pytorch1,8.0安装命令
+conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=10.2 -c pytorch
+安装完成后运行
+python
+import torch
+print(torch.cuda.is_available())
+若打印出True则说明安装成功
+```
+
+![请添加图片描述](问题：安装ros1.assets/2036ec5398584625a81e721e6efc6de7.png)
+
+#### 运行yolov5
+
+博主的yolov5用的是6.1版本的，如果各位下载其它版本可能会导致博主的权重无法适配的情况，因此各位使用yolov5的版本尽量与博主保持一致。  
+首先进入github，找到yolov5-6.1分支，[https://github.com/ultralytics/yolov5/tree/v6.1](https://github.com/ultralytics/yolov5/tree/v6.1)可以看到6.1版本的运行条件是：Clone repo and install requirements.txt in a Python>=3.7.0 environment, including PyTorch>=1.7.那目前的环境是正好符合的。
+
+##### 下载yolov5-6.1项目
+
+```
+git clone https://github.com/ultralytics/yolov5.git
+```
+
+或者也可以直接下载该分支的zip代码包
+
+##### 安装所需库
+
+```
+cd yolov5
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+注意:simple 不能少, 是 https 而不是 http，这里添加源用于提高下载速度
+```
+
+##### 下载预训练权重文件
+
+下载yolov5s.pt,yolov5m.pt,yolov5l.pt,yolov5x.pt权重文件,并放置在weights文件夹下，  
+[https://github.com/ultralytics/yolov5/releases/tag/v6.1](https://github.com/ultralytics/yolov5/releases/tag/v6.1)  
+进入上述网页找到assets栏下载权重。  
+![请添加图片描述](https://img-blog.csdnimg.cn/49b83dfee5e34256be99ebd945bad177.png)
+
+##### 安装测试
+
+打开终端
+
+```
+cd yolov5
+conda activate 虚拟环境的名字
+python detect.py --source ./data/images/ --weights weights/yolov5s.pt
+```
+
+跑完测试会告知你测试结果保存的路径，这里路径为runs/detect/exp10  
+![请添加图片描述](https://img-blog.csdnimg.cn/d0b3d8c863564464a6488f191d572cdf.png)  
+依据此路径查找到测试结果，如下图所示：  
+![请添加图片描述](问题：安装ros1.assets/b23b606f33ea48b990301bb61d037add.jpeg)  
+至此yolov5安装以及环境配置完毕。
+
+#### 补充
+
+在新建的conda环境中，需要补充安装rospkg，要不然在运行yolov5\_ros功能包的时候会报错。no model name rospkg.
+
+```
+pip install rospkg
+```
+
+#### 小结
+
+ros以及yolov5的环境已经配置完毕，各位可按照此教程进行配置，如有问题可在评论区提问。关于这块内容，博主也是踩过非常多的坑，也希望各位若遇到问题应当耐心将其解决。下一节，将对项目功能包进行介绍，并对代码开源。
+
+#### 参考资料
+
+1.  [Ubuntu18.04安装Anaconda(最新最全亲测图文并茂)](https://blog.csdn.net/KIK9973/article/details/118772450?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522167722683316782429799602%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=167722683316782429799602&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduend~default-3-118772450-null-null.142%5Ev73%5Econtrol,201%5Ev4%5Eadd_ask,239%5Ev2%5Einsert_chatgpt&utm_term=anaconda%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8Bubuntu18.04&spm=1018.2226.3001.4187)
+2.  [yolov5-6.1，使用github镜像](https://kgithub.com/ultralytics/yolov5/tree/v6.1)
+3.  [yolov5权重，使用github镜像](https://kgithub.com/ultralytics/yolov5/releases/tag/v6.1)
+4.  [gazebo版本升级以及环境太暗的解决方法](https://blog.csdn.net/qq_48427527/article/details/124459006?spm=1001.2014.3001.5502)
+
