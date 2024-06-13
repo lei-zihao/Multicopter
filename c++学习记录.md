@@ -115,6 +115,54 @@ PX4CtrlFSM::PX4CtrlFSM(Parameter_t &param_, LinearControl &controller_) : param(
 
 # 知识点二：param参数服务器
 
+rosparam load(先准备 yaml 文件)  从外部文件加载参数
+
+rosparam  command
+
+```xml
+<param name="robot_description" command="$(find xacro)/xacro $(find demo01_urdf_helloworld)/urdf/xacro/my_base.urdf.xacro" />
+```
+
+- `name="robot_description"`：这是参数的名称。在这个例子中，参数名是 `robot_description`，通常用于存储机器人的URDF（Unified Robot Description Format）描述。
+
+- `command="$(find xacro)/xacro $(find demo01_urdf_helloworld)/urdf/xacro/my_base.urdf.xacro"`：这是一个指令，告诉ROS如何生成这个参数的值。具体来说，这里的指令是调用 `xacro`（XML宏）工具来处理一个Xacro文件，并生成URDF描述。
+
+详细解释 `command` 的内容：
+
+1. `$(find xacro)/xacro`：
+   - `$(find xacro)`：这是ROS的一个查找命令，用来找到 `xacro` 包的路径。
+   - `/xacro`：这是 `xacro` 包中的 `xacro` 可执行文件。结合前面的查找命令，这部分指定了要运行的程序。
+
+2. `$(find demo01_urdf_helloworld)/urdf/xacro/my_base.urdf.xacro`：
+   - `$(find demo01_urdf_helloworld)`：这是另一个ROS的查找命令，用来找到 `demo01_urdf_helloworld` 包的路径。
+   - `/urdf/xacro/my_base.urdf.xacro`：这是在 `demo01_urdf_helloworld` 包中指定的Xacro文件的路径。结合前面的查找命令，这部分指定了要处理的文件。
+
+综合起来，这个指令的意思是：
+
+1. 找到 `xacro` 包，并运行其中的 `xacro` 可执行文件。
+2. 找到 `demo01_urdf_helloworld` 包，并处理其中的 `urdf/xacro/my_base.urdf.xacro` 文件。
+3. `xacro` 工具会将这个Xacro文件转换成URDF文件，并将结果作为 `robot_description` 参数的值。
+
+### 使用这个 `<param>` 标签的典型场景
+
+通常，这个参数会在启动文件（launch file）中使用，以便在启动时加载机器人的URDF描述。例如：
+
+```xml
+<launch>
+  <!-- Define the robot description parameter -->
+  <param name="robot_description" command="$(find xacro)/xacro $(find demo01_urdf_helloworld)/urdf/xacro/my_base.urdf.xacro" />
+
+  <!-- Launch other nodes that need the robot description -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+</launch>
+```
+
+在这个启动文件中，首先定义了 `robot_description` 参数，接着启动 `robot_state_publisher` 节点，这个节点会使用 `robot_description` 参数来获取机器人的URDF描述。
+
+希望这能帮助你理解这个 `<param>` 标签的作用和用法。如果有更多问题或需要进一步解释，请随时问我！
+
+
+
 #### 参数服务器获取参数
 
 ```
