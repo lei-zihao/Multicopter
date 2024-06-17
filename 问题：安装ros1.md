@@ -698,7 +698,17 @@ sudo vim /var/lib/NetworkManager/NetworkManager.state
 
 [VMware 虚拟机无法连接网络解决办法](https://blog.csdn.net/m0_37259197/article/details/78221016)
 
+### 解决方法三：  
 
+可能原因是VMware NET Service服务没开
+
+win + R，输入：services.[msc](https://so.csdn.net/so/search?q=msc&spm=1001.2101.3001.7020) ，启动VMware NAT Servise服务
+
+![在这里插入图片描述](问题：安装ros1.assets/def4e7cfda80406b910ee9b8f7546a7e.png)
+
+找到“VMware NAT Service”，点击左边的“启动”。
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/950954e6737c49efb711ff204cd7284e.png)
 
 
 
@@ -1367,6 +1377,10 @@ pip install rospkg
 
 
 # 问题二十二：YOLOV5](https://so.csdn.net/so/search?q=YOLOV5&spm=1001.2101.3001.7020)在ubuntu18.04下安装基于CPU的
+
+**ubuntu18.04默认安装的python3环境是：python 3.6.9.在yolov5的分支中查看对应版本要求的python3开发环境。**
+**目前，默认的yolov5版本是v6.1,而要求的python环境：python>=3.7.0。**
+**这里，我们选择yolov5 6.0版本，其python环境：python >=3.6.0 ，PyTorch >=1.7**
 
 首先感谢这个博主**如阳光如沵**，我按照这个配置的，虽然出了点问题，最后还是解决了，在这先表示感谢[ubuntu18.04配置yolov5环境](https://blog.csdn.net/weixin_44126988/article/details/123950492)
 
