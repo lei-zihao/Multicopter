@@ -1174,6 +1174,18 @@ catkin_make
 
 本篇主要讲如何搭建yolov5运行环境，以及一些需要注意避坑的重要知识点。anaconda与[显卡驱动](https://so.csdn.net/so/search?q=%E6%98%BE%E5%8D%A1%E9%A9%B1%E5%8A%A8&spm=1001.2101.3001.7020)先装后装是没有什么影响的，关键在于，不能将显卡驱动以及cuda装在虚拟环境中。这里介绍一下博主的电脑环境为i7九代+ubuntu18.04+ros-melodic+gtx1660ti显卡，渣渣神舟笔记本。当然各位配置是越高越好哈，渣本训练个模型快要报废了。
 
+
+
+首先查看自己python的环境
+
+```cpp
+python3
+```
+
+ubuntu18.04默认安装的python3环境是：python 3.6.9.在yolov5的分支中查看对应版本要求的python3开发环境。  
+目前，默认的yolov5版本是v6.1,而要求的python环境：python>=3.7.0。  
+这里，我们选择yolov5 6.0版本，其python环境：python >=3.6.0 ，PyTorch >=1.7
+
 #### 显卡驱动以及cuda安装
 
 在博主之前发的文章中有提到显卡驱动的安装方法：[gazebo版本升级以及环境太暗的解决方法](https://blog.csdn.net/qq_48427527/article/details/124459006?spm=1001.2014.3001.5502)，然而这样的方法其实也有一些问题，那就是使用
@@ -1336,6 +1348,11 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 注意:simple 不能少, 是 https 而不是 http，这里添加源用于提高下载速度
 ```
 
+这些依赖项可以手动安装`pip3 install numpy==1.18.5`  
+也可以`pip install -r requirements.txt`但是吧有的博主说整体安装出现报错，还真有，具体我也不太懂，我先手动安装的，最后又执行了pip install -r requirements.txt这个代码，发现是有错误，我也没管。也就这样了。大家还是手动把。
+
+
+
 ##### 下载预训练权重文件
 
 下载yolov5s.pt,yolov5m.pt,yolov5l.pt,yolov5x.pt权重文件,并放置在weights文件夹下，  
@@ -1375,58 +1392,6 @@ pip install rospkg
 4.  [gazebo版本升级以及环境太暗的解决方法](https://blog.csdn.net/qq_48427527/article/details/124459006?spm=1001.2014.3001.5502)
 
 
-
-# 问题二十二：YOLOV5](https://so.csdn.net/so/search?q=YOLOV5&spm=1001.2101.3001.7020)在ubuntu18.04下安装基于CPU的
-
-**ubuntu18.04默认安装的python3环境是：python 3.6.9.在yolov5的分支中查看对应版本要求的python3开发环境。**
-**目前，默认的yolov5版本是v6.1,而要求的python环境：python>=3.7.0。**
-**这里，我们选择yolov5 6.0版本，其python环境：python >=3.6.0 ，PyTorch >=1.7**
-
-首先感谢这个博主**如阳光如沵**，我按照这个配置的，虽然出了点问题，最后还是解决了，在这先表示感谢[ubuntu18.04配置yolov5环境](https://blog.csdn.net/weixin_44126988/article/details/123950492)
-
-首先下载YOLOV5的文件[YOLOV5的下载链接，最好弄梯子 ，不是也没事](https://github.com/ultralytics/yolov5)  
-首先查看自己python的环境
-
-```cpp
-python3
-```
-
-ubuntu18.04默认安装的python3环境是：python 3.6.9.在yolov5的分支中查看对应版本要求的python3开发环境。  
-目前，默认的yolov5版本是v6.1,而要求的python环境：python>=3.7.0。  
-这里，我们选择yolov5 6.0版本，其python环境：python >=3.6.0 ，PyTorch >=1.7
-
-## 1.CPU版本下载安装PyTorch
-
-上面这个老哥的是按照这个来的，但是我的不行知道为啥装不上，于是我就用了新的版本，去官网弄得
-
-```cpp
-pip install torch==1.8.0+cpu torchvision==0.9.0+cpu torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
-```
-
-[PyTorch官网](https://so.csdn.net/so/search?q=PyTorch%E5%AE%98%E7%BD%91&spm=1001.2101.3001.7020)的网址是[PyTorch官网](https://pytorch.org/)下载  
-进来下滑后显示这样；  
-![需要在这里选择一个](问题：安装ros1.assets/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5rKh5q-V5Lia55qE5bCP5Z6D5Zy-,size_20,color_FFFFFF,t_70,g_se,x_16.png)  
-因为老的版本老是找不到，但是我又不会用清华源下载的安装，只能这样了。
-
-### 我的选择是下面这样，但是没提示版本，具体多少我也不清楚
-
-![选择的](问题：安装ros1.assets/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5rKh5q-V5Lia55qE5bCP5Z6D5Zy-,size_20,color_FFFFFF,t_70,g_se,x_16-171826912532514.png)  
-然后回到ubuntu18.04打开终端把这一段弄进去，但是这个不是固定不变的，随着官方的升级可能这个也不行了，需要进官网弄
-
-### 输入到终端：
-
-```bash
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-```
-
-### 2、其他依赖
-
-由于前面下载了YOLOV5的代码，打开这个看看依赖项有哪些  
-![在这里插入图片描述](问题：安装ros1.assets/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5rKh5q-V5Lia55qE5bCP5Z6D5Zy-,size_20,color_FFFFFF,t_70,g_se,x_16-171826912532615.png)  
-不过我目前不明白这个opencv-python>=4.1.2什么意思，不是opencv3.6.9吗，不太明白，需要哪位大神指点指点，小菜在这先行谢过。  
-![在这里插入图片描述](问题：安装ros1.assets/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5rKh5q-V5Lia55qE5bCP5Z6D5Zy-,size_20,color_FFFFFF,t_70,g_se,x_16-171826912532616.png)  
-这些依赖项可以手动安装`pip3 install numpy==1.18.5`  
-也可以`pip install -r requirements.txt`但是吧有的博主说整体安装出现报错，还真有，具体我也不太懂，我先手动安装的，最后又执行了pip install -r requirements.txt这个代码，发现是有错误，我也没管。也就这样了。大家还是手动把。
 
 ### 以上都安装好了，接下来就是到你的YOLOV5下运行你的那个文件啦，我的是，python3 detect.py就好了，对了不要忘了这个3，要不他报错，因为默认是python2(可能我装了ROS的事把)，大家的是默认python3就好，反正我这个地方也弄了我半天，具体在另一个帖子有报错的例子。
 
