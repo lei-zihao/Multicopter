@@ -1245,7 +1245,11 @@ Anaconda 是一个用于科学计算的 Python 发行版,支持 Linux, Mac, Wind
 
 其实anaconda安装配置这一块网上的教程不少，这块各位可以酌情参考。
 
-##### 安装anaconda
+##### 安装anaconda（anaconda安装也可以直接使用wget命令，在Terminal中进行下载，执行bash命令进行安装：
+wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-aarch64.sh
+bash Anaconda3-2022.05-Linux-aarch64.sh
+之后一路Enter+yes，直到安装完成
+重新打开Terminal，发现命令行最前面有了(base)，如果没有的话，执行source activate命令，回车即可）
 
 1.  先去官方地址下载好对应的安装包（还有可去清华镜像站下载，具体可看参考文献部分）  
     下载地址:[https://www.anaconda.com/download/#linux](https://www.anaconda.com/download/#linux)
@@ -1268,13 +1272,12 @@ export PATH=/home/bai/anaconda3/bin:$PATH
 保存退出后执行: `source ~/.bashrc`  
 再次输入 `conda list` 测试看看,应该没有问题。
 
-##### 添加anaconda国内镜像配置
+##### 添加anaconda国内镜像配置(见问题二十四，添加软件源)
 
-清华TUNA提供了 Anaconda 仓库的镜像,运行以下三个命令:
+清华TUNA提供了 Anaconda 仓库的镜像,运行以下三个命令:（最简单的）
 
 ```
-conda config --add channels
-https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
 conda config --add channels
 https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
 conda config --set show_channel_urls yes
@@ -1406,3 +1409,40 @@ jeston是arm架构，不是X86.所以安装软件包不一样
 2，anconda安装
 
 ![image-20240621135944422](问题：安装ros1.assets/image-20240621135944422.png)
+
+
+
+# 问题二十四：conda创建不了环境
+
+# Conda网络报错Collecting package metadata (current_repodata.json): failed_channels: - defaults - conda-forge platform: linux-CSDN博客
+
+使用python部署独立环境小伙伴因为网速慢没少吃苦。下面的异常你一定见过，或者似曾相识
+
+```powershell
+CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-64/qt-5.12.5-hd8c4c69_1.tar.bz2> Elapsed: - An HTTP error occurred when trying to retrieve this URL. HTTP errors are often intermittent, and a simple retry will get you on your way. Collecting package metadata (current_repodata.json): failed
+```
+
+```powershell
+CondaHTTPError: HTTP 000 CONNECTION FAILED for url <https://conda.anaconda.org/conda-forge/linux-64/current_repodata.json> Elapsed: - An HTTP error occurred when trying to retrieve this URL. HTTP errors are often intermittent, and a simple retry will get you on your way. 'https://conda.anaconda.org/conda-forge/linux-6
+```
+
+解决方法
+
+[Anaconda](https://so.csdn.net/so/search?q=Anaconda&spm=1001.2101.3001.7020)下载速度很慢，笔者换了Miniconda速度稍微好一些。但是一些资源minconda还是下载不到。经过最终寻找，笔者在清华大学镜像网站上找到设置中国镜像源的版本如下：  
+#1、备份本地配置
+
+```powershell
+cp ~/.condarc ~/.condarc.bak vim ~/.condarc
+```
+
+#2、删除原来的内容，填入以下
+
+```powershell
+channels: - defaults show_channel_urls: true channel_alias: https://mirrors.tuna.tsinghua.edu.cn/anaconda default_channels: - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2 custom_channels: conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud msys2: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud menpo: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud simpleitk: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+```
+
+#3、清除缓存
+
+```powershell
+conda clean -i
+```
