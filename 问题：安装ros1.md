@@ -1429,3 +1429,15 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 也可以`pip install -r requirements.txt`但是吧有的博主说整体安装出现报错，还真有，具体我也不太懂，我先手动安装的，最后又执行了pip install -r requirements.txt这个代码，发现是有错误，我也没管。也就这样了。大家还是手动把。
 
 ### 以上都安装好了，接下来就是到你的YOLOV5下运行你的那个文件啦，我的是，python3 detect.py就好了，对了不要忘了这个3，要不他报错，因为默认是python2(可能我装了ROS的事把)，大家的是默认python3就好，反正我这个地方也弄了我半天，具体在另一个帖子有报错的例子。
+
+
+
+# 问题二十三：jetson安装软件
+
+jeston是arm架构，不是X86.所以安装软件包不一样
+
+1，小猫安装
+
+2，anconda安装
+
+![image-20240621135944422](问题：安装ros1.assets/image-20240621135944422.png)
