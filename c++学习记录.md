@@ -328,7 +328,71 @@ int main(int argc, char *argv[])
 
 
 
+# 知识点三：vector使用
 
+## 好处：向量（`vector`）是一个动态数组，可以根据需要增加其大小。
+
+```
+geometry_msgs::Pose wp;
+std::vector<geometry_msgs::Pose> waypoints;
+
+// 定义第一个图片靶的位置
+wp.position.x = 0; //假设图片1位置
+wp.position.y = 0;
+wp.position.z = 1;
+waypoints.push_back(wp);
+
+// 清空wp变量，重新使用
+wp = geometry_msgs::Pose();
+wp.position.x = 1; //假设图片2位置
+wp.position.y = 0;
+wp.position.z = 1;
+waypoints.push_back(wp);
+
+// 定义其他图片靶的位置
+wp = geometry_msgs::Pose(); 
+wp.position.x = 2; //假设图片3位置
+wp.position.y = 0;
+wp.position.z = 1;
+waypoints.push_back(wp);
+
+wp = geometry_msgs::Pose(); 
+wp.position.x = 3; //假设图片4位置
+wp.position.y = 0;
+wp.position.z = 1;
+waypoints.push_back(wp);
+```
+
+`push_back()` 是 C++ STL（Standard Template Library，标准模板库）中 `std::vector` 类的成员函数，用于向向量（`vector`）的末尾添加一个元素。
+
+### 用法：
+```cpp
+vector_name.push_back(value);
+```
+
+### 参数：
+- `vector_name` 是要添加元素的向量的名称。
+- `value` 是要添加到向量中的元素的值。
+
+### 功能：
+- 将指定的元素添加到向量的末尾，扩展向量的大小，并将新元素放置在新的末尾位置。
+
+### 示例：
+```cpp
+std::vector<int> my_vector;
+my_vector.push_back(10); // 向 my_vector 向量的末尾添加值为 10 的元素
+```
+
+### 注意事项：
+- `push_back()` 操作会动态增长向量（vector）的大小，因此在添加大量元素时要考虑内存使用。
+- 向量（`vector`）是一个动态数组，可以根据需要增加其大小。
+
+### 更多信息：
+- `push_back()` 只能在向量末尾添加元素，不能在中间或头部插入。
+- 当插入元素时，向量会自动调整大小以容纳新元素。
+- 您可以将任何类型的元素添加到向量中，包括自定义类型和结构。
+
+希望这些信息能帮助您更好地理解`push_back()` 函数的用法和语法。
 
 
 

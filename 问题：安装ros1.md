@@ -1491,7 +1491,8 @@ pip install catkin-tools rospkg pyyaml empy numpy
 所以我们需要将 `/usr/bin/python`替换成python3的；
 
 ```powershell
-sudo rm /usr/bin/python sudo ln -s /usr/bin/python3 /usr/bin/python
+sudo rm /usr/bin/python 
+sudo ln -s /usr/bin/python3 /usr/bin/python
 ```
 
 这时候输入python -V；输出的就是版本3 的信息；
