@@ -9,7 +9,9 @@ rosrun mavros mavcmd long 511 31 5000 0 0 0 0 0 & sleep 1
 roslaunch px4 mavros_posix_sitl.launch 
 ```
 
-
+```
+killall -9 gzclient，killall -9 gzserver 
+```
 
 source devel/setup.bash 
 

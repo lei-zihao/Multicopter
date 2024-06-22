@@ -436,3 +436,16 @@ vector<int> a(b,b+6);    //从数组中获得初值，b[0]~b[5]
    （24）copy(a.begin(),a.end(),b.begin()+1); //把a中的从a.begin()（包括它）到a.end()（不包括它）的元素复制到b中，从b.begin()+1的位置（包括它）开        始复制，覆盖掉原有元素
 ```
 
+
+
+
+
+# 知识点四：让无人机进入offboard模式
+
+1.有定位源。查看/mavros/local/position有数据输出
+
+2.发布频率大于2HZ
+
+3./cmd_pose_enu话题和/mavros/ setpoint_position/local话题控制位置区别:用第一个不能进入offfboard模式，用第二个可以进入。
+
+![image-20240622201253099](C++学习记录.assets/image-20240622201253099.png)
