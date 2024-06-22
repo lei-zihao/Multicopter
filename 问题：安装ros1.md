@@ -1505,3 +1505,15 @@ sudo ln -s /usr/bin/python3 /usr/bin/python
 ```powershell
 conda activate base (后面接你要激活的虚拟环境)
 ```
+
+
+
+
+
+# 问题二十四：Linux下载QGC报错
+
+### 问题描述：![image-20240622191115425](问题：安装ros1.assets/image-20240622191115425.png)
+
+## 解决方案：下载较低版本（稳定版）
+
+![image-20240622191230524](问题：安装ros1.assets/image-20240622191230524.png)
