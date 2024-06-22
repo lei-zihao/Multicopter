@@ -128,6 +128,20 @@ wget http://fishros.com/install -O fishros && . fishros
 
 
 
+cuda版本
+
+```
+nvcc —V
+```
+
+python版本
+
+```
+python    python3
+```
+
+opencv版本
+
 
 
 

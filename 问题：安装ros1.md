@@ -1446,3 +1446,61 @@ channels: - defaults show_channel_urls: true channel_alias: https://mirrors.tuna
 ```powershell
 conda clean -i
 ```
+
+
+
+
+
+# 问题二十四：启动不了仿真环境
+
+## 问题描述：ROS:ModuleNotFoundError: No module named ‘rospkg‘_modulenotfounderror: no module named 'rospkg-CSDN博客
+
+
+
+一般是安装了[anaconda](https://so.csdn.net/so/search?q=anaconda&spm=1001.2101.3001.7020) 导致的；
+
+## 方法一：
+
+不关闭[conda](https://so.csdn.net/so/search?q=conda&spm=1001.2101.3001.7020)，那么就需要安装所需的rospkg包及其他依赖：
+
+```powershell
+pip install catkin-tools rospkg pyyaml empy numpy
+```
+
+## 方法二：
+
+首先，关闭anaconda：
+
+```powershell
+conda deactivate
+```
+
+这句话的意思就是不再使用conda的相关库以及python，用系统的python来操作；  ![image-20240622145821651](问题：安装ros1.assets/image-20240622145821651.png)
+然后，再安装依赖;（已安装，不用了)
+
+```powershell
+sudo apt-get install pip
+```
+
+```powershell
+pip install catkin-tools rospkg pyyaml empy numpy
+```
+
+这里可能还有一个问题：ROS使用的是python2的版本，很可能会自动寻找/usr/bin/python，这个版本是python2的版本，而你在系统下使用的pip很可能是python3的工具，这时候还是会出现 No [module](https://so.csdn.net/so/search?q=module&spm=1001.2101.3001.7020) named ‘rospkg’。
+
+所以我们需要将 `/usr/bin/python`替换成python3的；
+
+```powershell
+sudo rm /usr/bin/python sudo ln -s /usr/bin/python3 /usr/bin/python
+```
+
+这时候输入python -V；输出的就是版本3 的信息；
+
+这样问题就解决了。
+
+另外：  
+如果要需要使用conda：
+
+```powershell
+conda activate base (后面接你要激活的虚拟环境)
+```
