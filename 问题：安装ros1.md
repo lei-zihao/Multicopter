@@ -1589,3 +1589,109 @@ ROS path [2]=/opt/ros/noetic/share
 sudo apt-get install ros-melodic-image-view
 ```
 
+
+
+# 问题二十六：训练YOLOV5
+
+### \-整理yolov5模型
+
+```
+为了完成训练工作，我们需要将训练的图片按照指定的格式进行整理，
+详细参照yolov5官方指南：
+https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data
+```
+
+我们首先需要建立如下的文件夹：  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70.png)  
+所有文件放在yolo\_A文件夹下，子文件夹images用来存放样本图片，labels文件夹用来存储标注信息。A.yaml文件用来存放一些目录信息和标志物分类。
+
+我这次测试的检测哆啦A梦的头像，我采集了50张哆啦A梦的样本，放到images文件夹下：  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834811.png)  
+接下来我们就要进行图片的标注工作了，图片标注我们用到了一个名为labelimg的工具：https://github.com/tzutalin/labelImg  
+
+
+
+```
+sudo apt-get install pyqt5-dev-tools
+sudo pip3 install lxml
+git clone https://github.com/tzutalin/labelImg.git
+cd labelImg
+make all
+python3 labelImg.py  #打开labelImg
+```
+
+即可进入我们的界面中来。进入之后，首先我们先把一些选项勾上，便于我们标记。然后，最重要的是把标记模式改为yolo。  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834822.png)  
+之后我们点击Open dir选择我们图片所在的images文件夹，选择之后会弹窗让你选择labels所在的文件夹。当然如果选错了，也可以点change save dir进行修改。
+
+然后软件右上角我们打开这个选项，当我们标记图片后，就会自动帮我们归类到A了  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834823.png)
+
+现在我们就可以开始进行标记了，常用的快捷键，用主要wad三个键
+
+```markup
+Ctrl + u Load all of the images from a directory 
+Ctrl + r Change the default annotation target dir 
+Ctrl + s Save Ctrl + d Copy the current label and rect box 
+Ctrl + Shift + d Delete the current image Space Flag the current image as verified w Create a rect box d Next image a Previous image del Delete the selected rect box 
+Ctrl++ Zoom in Ctrl-- Zoom out ↑→↓← | Keyboard arrows to move selected rect box
+```
+
+通过鼠标拖拽框选即可标注：  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834824.png)
+
+所有图片标注好之后，我们再来看我们的labels文件夹，可以看到很多txt文件。每个文件都对应着我们标记的类别和框的位置：  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834825.png)  
+最后还要做的是建立yaml文件，文件的位置也不要放错：  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834826.png)  
+文件里面内容如下，其中train和val都是我们images的目录，labels的目录不用写进去，会自动识别。nc代表识别物体的种类数目，names代表种类名称，如果多个物体种类识别的话，可以自行增加。
+
+```markup
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/] train: ../yolo_A/images/ val: ../yolo_A/images/ # number of classes nc: 1 # class names names: ['A meng']
+```
+
+到目前，我们的训练的材料就已经准备好了。
+
+### \-yolov5模型训练（租服务器训练）（看哔哩哔哩视频）
+
+```python
+git clone https://github.com/ultralytics/yolov5 # clone repo %cd yolov5 
+pip install -qr requirements.txt # install dependencies
+```
+
+上传数据集压缩包并解压
+
+```python
+unrar x ../yolo_A ../
+```
+
+然后一下代码可以测试能否正常工作，顺带会下载yolov5s.pt文件，这个文件后面训练的时候会用到
+
+```python
+python detect.py --weights yolov5s.pt --img 640 --conf 0.25 --source data/images/ Image(filename='runs/detect/exp/zidane.jpg', width=600)
+```
+
+如果一切正常会显示如下图  
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834837.png)  
+接下来就要开始训练模型了：
+
+```python
+python train.py --img 640 --batch 50 --epochs 100 --data ../yolo_A/A.yaml --weights yolov5s.pt --nosave --cache
+```
+
+训练完成后，我们可以看到训练结果保存的位置：  
+![在这里插入图片描述](问题：安装ros1.assets/20210223190940761.png)  
+在对应exp文件下可以看到用训练集做预测的结果：
+
+```python
+Image(filename='runs/train/exp2/test_batch0_pred.jpg', width=800) # test batch 0 predictions
+```
+
+现在我们用训练出来的结果找一张网图做测试（文件名和导出预测文件地址不一定相同，但是相似，大家自行寻找）
+
+```python
+python detect.py --weights /content/yolov5/runs/train/exp2/weights/best.pt --img 640 --conf 0.25 --source ../test2.jpg Image(filename='runs/detect/exp4/test2.jpg', width=600)
+```
+
+![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834838.png)
+
