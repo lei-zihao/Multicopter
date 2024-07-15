@@ -120,7 +120,11 @@ printenv | grep ROS
 查看更详细的信息
 [image-20231210171930505.png](https://postimg.cc/5jFZ85jh)
 
+安装包
 
+```
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
 
 一键安装ros
 

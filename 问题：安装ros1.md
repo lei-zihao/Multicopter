@@ -1517,3 +1517,75 @@ conda activate base (后面接你要激活的虚拟环境)
 ## 解决方案：下载较低版本（稳定版）
 
 ![image-20240622191230524](问题：安装ros1.assets/image-20240622191230524.png)
+
+
+
+# 问题二十五：ubuntu18.04 USB_cam安装使用
+
+1.安装：
+---
+
+# ubuntu利用usb_cam打开摄像头_ubuntu打开摄像头命令-CSDN博客
+
+> ## Excerpt
+> 文章浏览阅读6.4k次，点赞5次，收藏34次。一.安装摄像头驱动usb_cam想要标定多个相机，首先得把相机打开吧，usb_cam是针对usb摄像头的ros驱动包，简单来说就是得有这个功能包，才能在ros中把摄像头打开。首先打开终端，输入：sudo apt-get install ros-melodic-usb-cam这里melodic应该根据自己Ubuntu系统进行灵活变换，例如我使用的Ubuntu18.04，那么我对应的就是melodic版本。驱动安装完成之后，会自带一个launch文件，我们打开launch文件就可以打开摄_ubuntu打开摄像头命令
+
+---
+## 一.安装摄像头驱动usb\_cam
+
+想要[标定](https://so.csdn.net/so/search?q=%E6%A0%87%E5%AE%9A&spm=1001.2101.3001.7020)多个相机，首先得把相机打开吧，usb\_cam是针对usb摄像头的ros驱动包，简单来说就是得有这个功能包，才能在ros中把摄像头打开。
+
+首先打开终端，输入：
+
+```csharp
+sudo apt-get install ros-melodic-usb-cam
+```
+
+这里melodic应该根据自己[Ubuntu系统](https://so.csdn.net/so/search?q=Ubuntu%E7%B3%BB%E7%BB%9F&spm=1001.2101.3001.7020)进行灵活变换，例如我使用的Ubuntu18.04，那么我对应的就是melodic版本。
+
+驱动安装完成之后，会自带一个launch文件，我们打开launch文件就可以打开摄像头。
+
+```undefined
+roslaunch usb_cam usb_cam-test.launch
+```
+
+此时，保证相机已经开机，并通过usb接口连接至电脑，则会出现以下画面，并成功打开摄像头。
+
+![c9b07b1b67cf41a6be6988892d6f5c05.png](问题：安装ros1.assets/c9b07b1b67cf41a6be6988892d6f5c05.png)
+
+## 二.报错： 如果报错如下select timeout
+
+![5ad28192a60d4f718a46d325997d264a.png](问题：安装ros1.assets/5ad28192a60d4f718a46d325997d264a.png)
+
+说明usb兼容性选择错了，需要关闭虚拟机进行更改，点击编辑虚拟机，打开usb控制器，将usb兼容性改为usb3.1，点击确定，重新打开虚拟机，再次运行即可打开摄像头。
+
+![845dd2cf372f4aa686470df64e8acb2e.png](问题：安装ros1.assets/845dd2cf372f4aa686470df64e8acb2e.png)
+
+### 三.报错： ERROR: cannot launch node of type [image_view/image_view]: image_viewROS path [0]=/opt/ros/noetic/s-CSDN博客
+
+运行笔记本自带摄像头时报错。
+
+运行命令：
+
+```undefined
+roslaunch usb_cam usb_cam-test.launch
+```
+
+报错代码：
+
+```cobol
+ERROR: cannot launch node of type [image_view/image_view]: image_view
+
+ROS path [0]=/opt/ros/noetic/share/ros
+
+ROS path [1]=/home/zxf/catkin_ws/src
+
+ROS path [2]=/opt/ros/noetic/share
+```
+
+解决方法：
+
+```sql
+sudo apt-get install ros-melodic-image-view
+```
+
