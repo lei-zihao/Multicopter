@@ -2021,3 +2021,149 @@ C-l清空屏幕
 - `Ctrl+b <number>`：切换到指定编号的窗口，其中的`<number>`是状态栏上的窗口编号。
 - `Ctrl+b w`：从列表中选择窗口。
 - `Ctrl+b ,`：窗口重命名。
+
+
+
+
+
+# 知识点二十三：cat的使用
+
+在 Linux 和 Unix 系统中，`cat` 是一个用于连接和显示文件内容的命令。它的名字来源于“concatenate”的缩写。`cat` 命令的基本功能是读取文件并将其内容输出到标准输出（通常是终端）。
+
+### `cat` 命令的基本用法
+
+1. **显示文件内容**：
+   ```bash
+   cat filename
+   ```
+   例如：
+   ```bash
+   cat myfile.txt
+   ```
+   这会显示 `myfile.txt` 文件的内容。
+
+2. **连接多个文件并显示**：
+   ```bash
+   cat file1 file2
+   ```
+   例如：
+   ```bash
+   cat part1.txt part2.txt
+   ```
+   这会将 `part1.txt` 和 `part2.txt` 的内容连接在一起并显示。
+
+3. **将文件内容重定向到另一个文件**：
+   ```bash
+   cat file1 file2 > newfile
+   ```
+   例如：
+   ```bash
+   cat part1.txt part2.txt > combined.txt
+   ```
+   这会将 `part1.txt` 和 `part2.txt` 的内容连接并保存到 `combined.txt` 文件中。如果 `combined.txt` 文件已经存在，它会被覆盖。
+
+4. **附加文件内容到另一个文件**：
+   ```bash
+   cat file1 >> existingfile
+   ```
+   例如：
+   ```bash
+   cat part2.txt >> combined.txt
+   ```
+   这会将 `part2.txt` 的内容附加到 `combined.txt` 文件的末尾。
+
+5. **从标准输入读取并显示（按 Ctrl+D 结束输入）**：
+   ```bash
+   cat
+   ```
+   这会等待你输入文本，然后显示输入的内容。按 `Ctrl+D` 结束输入。
+
+### 常用选项
+
+- `-n`：显示行号。
+  ```bash
+  cat -n filename
+  ```
+  例如：
+  ```bash
+  cat -n myfile.txt
+  ```
+  这会显示 `myfile.txt` 文件的内容并为每一行编号。
+
+- `-b`：为非空行显示行号。
+  ```bash
+  cat -b filename
+  ```
+  例如：
+  ```bash
+  cat -b myfile.txt
+  ```
+  这会为 `myfile.txt` 中的非空行编号。
+
+- `-s`：压缩连续的空行到一行。
+  ```bash
+  cat -s filename
+  ```
+  例如：
+  ```bash
+  cat -s myfile.txt
+  ```
+  这会将 `myfile.txt` 中的连续空行压缩为一行空行。
+
+### 示例
+以下是一些常见的示例：
+
+1. 显示文件内容：
+   ```bash
+   cat /etc/passwd
+   ```
+
+2. 将多个文件合并为一个新文件：
+   ```bash
+   cat part1.txt part2.txt > full.txt
+   ```
+
+3. 为文件内容添加行号并显示：
+   ```bash
+   cat -n myfile.txt
+   ```
+
+`cat` 是一个非常强大且常用的命令，特别是在处理文本文件时。了解如何使用 `cat` 可以大大提高你的命令行操作效率。
+
+
+
+# 知识点二十四：压缩包的解压
+
+在Ubuntu中解压缩压缩包，可以使用命令行工具。以下是一些常见的压缩文件格式以及解压缩它们的命令：
+
+.tar.gz 或 .tgz 文件:
+
+tar -xzf filename.tar.gz
+
+.tar.bz2 或 .tbz2 文件:
+
+tar -xjf filename.tar.bz2
+
+.tar.xz 文件:
+
+tar -xJf filename.tar.xz
+
+.zip 文件:
+
+unzip filename.zip
+
+.rar 文件 (需要先安装 unrar):
+
+sudo apt-get install unrar
+unrar x filename.rar
+
+.7z 文件 (需要先安装 p7zip-full):
+
+sudo apt-get install p7zip-full
+7z x filename.7z
+
+请确保将 filename 替换为实际的压缩文件名。如果你不确定文件的格式，可以使用 file 命令来检查：
+
+file compressed_file_name
+
+这将输出文件的详细信息，包括它的格式，从而帮助你选择合适的解压命令。
