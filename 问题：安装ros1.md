@@ -1695,3 +1695,402 @@ python detect.py --weights /content/yolov5/runs/train/exp2/weights/best.pt --img
 
 ![在这里插入图片描述](问题：安装ros1.assets/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NzAxNzkx,size_16,color_FFFFFF,t_70-17210756834838.png)
 
+
+
+
+
+
+
+
+
+# 问题二十七：配置仿真环境运行.launch文件显示not found
+
+
+
+"符号连接的层数过多" 错误通常表示符号链接存在循环，导致系统在尝试访问文件时陷入无限循环。以下是解决这个问题的步骤：
+
+### 1. 删除所有相关符号链接
+
+首先，找到并删除与 `libGeographic.so` 相关的所有符号链接，以避免循环：
+
+```bash
+sudo find /usr/lib/x86_64-linux-gnu -name 'libGeographic.so*' -exec rm -f {} +
+```
+
+### 2. 确保正确的库文件存在
+
+确保实际的库文件存在而不是符号链接。你之前提到的库文件路径是 `/usr/lib/x86_64-linux-gnu/libGeographic.so.19`，所以检查这个文件是否存在并且不是一个符号链接：
+
+```bash
+ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so.19
+```
+
+### 3. 重新创建正确的符号链接
+
+根据实际的库文件，重新创建正确的符号链接：
+
+```bash
+sudo ln -s /usr/lib/x86_64-linux-gnu/libGeographic.so.19 /usr/lib/x86_64-linux-gnu/libGeographic.so
+```
+
+### 4. 更新共享库缓存
+
+更新共享库缓存：
+
+```bash
+sudo ldconfig
+```
+
+### 5. 设置 `LD_LIBRARY_PATH` 环境变量
+
+确认并设置 `LD_LIBRARY_PATH` 环境变量：
+
+```bash
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+```
+
+### 6. 验证配置
+
+尝试运行 `GeoConvert` 命令来验证配置是否生效：
+
+```bash
+GeoConvert --version
+```
+
+### 检查并重置
+
+如果问题仍然存在，检查系统中是否存在其他 `libGeographic.so` 相关的符号链接并删除：
+
+```bash
+sudo find /usr -name 'libGeographic.so*' -exec rm -f {} +
+```
+
+然后，重新安装 `libgeographic-dev` 包：
+
+```bash
+sudo apt-get update
+sudo apt-get install --reinstall libgeographic-dev
+```
+
+### 总结
+
+通过这些步骤，你应该能够解决 `libGeographic.so.19` 库文件找不到的问题。如果问题仍然存在，请提供详细的 `ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so*` 输出以便进一步诊断。
+
+
+
+重新安装后sz@sz:~$ locate libGeographic.so.19 
+
+/usr/lib/x86_64-linux-gnu/libGeographic.so.19 
+
+sz@sz:~$ ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so.19 
+
+ls: 无法访问 '/usr/lib/x86_64-linux-gnu/libGeographic.so.19': 没有那个文件或目录 
+
+sz@sz:~$ GeoConvert --version 
+
+GeoConvert: error while loading shared libraries: libGeographic.so.19: cannot open shared object file: No such file or directory
+
+
+
+既然 `locate` 命令显示 `/usr/lib/x86_64-linux-gnu/libGeographic.so.19` 存在，但 `ls` 命令显示没有这个文件，这可能是文件系统或数据库的问题。我们可以按照以下步骤来解决这个问题。
+
+### 1. 更新文件数据库
+
+首先，确保文件数据库是最新的：
+```bash
+sudo updatedb
+```
+
+### 2. 重新查找文件
+
+再次使用 `locate` 命令查找文件：
+```bash
+locate libGeographic.so.19
+```
+
+### 3. 确认实际文件位置
+
+检查是否有其他位置的 `libGeographic.so.19` 文件。如果有，使用以下命令确认实际文件位置：
+```bash
+find /usr -name 'libGeographic.so*'
+```
+
+sz@sz:~$ find /usr -name 'libGeographic.so*' 
+
+/usr/lib/x86_64-linux-gnu/libGeographic.so
+
+
+
+从输出中可以看到，`/usr/lib/x86_64-linux-gnu/` 目录下仅存在 `libGeographic.so`，但没有 `libGeographic.so.19`。这可能意味着 `libGeographic.so.19` 确实未正确安装或符号链接有问题。
+
+### 1. 检查 `libgeographic` 包的内容
+
+首先，检查 `libgeographic` 包的内容，确保它确实包含所需的库文件：
+```bash
+dpkg -L libgeographic-dev
+```
+
+通过这些步骤，你应该能够解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `dpkg -L libgeographic-dev` 的输出信息以便进一步诊断。
+
+
+
+sz@sz:~$ dpkg -L libgeographic-dev
+/.
+/usr
+/usr/include
+/usr/include/GeographicLib
+/usr/include/GeographicLib/Accumulator.hpp
+/usr/include/GeographicLib/AlbersEqualArea.hpp
+/usr/include/GeographicLib/AzimuthalEquidistant.hpp
+/usr/include/GeographicLib/CassiniSoldner.hpp
+/usr/include/GeographicLib/CircularEngine.hpp
+/usr/include/GeographicLib/Config.h
+/usr/include/GeographicLib/Constants.hpp
+/usr/include/GeographicLib/DMS.hpp
+/usr/include/GeographicLib/Ellipsoid.hpp
+/usr/include/GeographicLib/EllipticFunction.hpp
+/usr/include/GeographicLib/GARS.hpp
+/usr/include/GeographicLib/GeoCoords.hpp
+/usr/include/GeographicLib/Geocentric.hpp
+/usr/include/GeographicLib/Geodesic.hpp
+/usr/include/GeographicLib/GeodesicExact.hpp
+/usr/include/GeographicLib/GeodesicLine.hpp
+/usr/include/GeographicLib/GeodesicLineExact.hpp
+/usr/include/GeographicLib/Geohash.hpp
+/usr/include/GeographicLib/Geoid.hpp
+/usr/include/GeographicLib/Georef.hpp
+/usr/include/GeographicLib/Gnomonic.hpp
+/usr/include/GeographicLib/GravityCircle.hpp
+/usr/include/GeographicLib/GravityModel.hpp
+/usr/include/GeographicLib/LambertConformalConic.hpp
+/usr/include/GeographicLib/LocalCartesian.hpp
+/usr/include/GeographicLib/MGRS.hpp
+/usr/include/GeographicLib/MagneticCircle.hpp
+/usr/include/GeographicLib/MagneticModel.hpp
+/usr/include/GeographicLib/Math.hpp
+/usr/include/GeographicLib/NearestNeighbor.hpp
+/usr/include/GeographicLib/NormalGravity.hpp
+/usr/include/GeographicLib/OSGB.hpp
+/usr/include/GeographicLib/PolarStereographic.hpp
+/usr/include/GeographicLib/PolygonArea.hpp
+/usr/include/GeographicLib/Rhumb.hpp
+/usr/include/GeographicLib/SphericalEngine.hpp
+/usr/include/GeographicLib/SphericalHarmonic.hpp
+/usr/include/GeographicLib/SphericalHarmonic1.hpp
+/usr/include/GeographicLib/SphericalHarmonic2.hpp
+/usr/include/GeographicLib/TransverseMercator.hpp
+/usr/include/GeographicLib/TransverseMercatorExact.hpp
+/usr/include/GeographicLib/UTMUPS.hpp
+/usr/include/GeographicLib/Utility.hpp
+/usr/lib
+/usr/lib/x86_64-linux-gnu
+/usr/lib/x86_64-linux-gnu/libGeographic.a
+/usr/lib/x86_64-linux-gnu/pkgconfig
+/usr/lib/x86_64-linux-gnu/pkgconfig/geographiclib.pc
+/usr/share
+/usr/share/cmake
+/usr/share/cmake/geographiclib
+/usr/share/cmake/geographiclib/FindGeographicLib.cmake
+/usr/share/doc
+/usr/share/doc/libgeographic-dev
+/usr/share/doc/libgeographic-dev/copyright
+/usr/share/doc/libgeographic-dev/examples
+/usr/share/doc/libgeographic-dev/examples/GeoidToGTX.cpp
+/usr/share/doc/libgeographic-dev/examples/JacobiConformal.cpp
+/usr/share/doc/libgeographic-dev/examples/JacobiConformal.hpp.gz
+/usr/share/doc/libgeographic-dev/examples/example-Accumulator.cpp
+/usr/share/doc/libgeographic-dev/examples/example-AlbersEqualArea.cpp
+/usr/share/doc/libgeographic-dev/examples/example-AzimuthalEquidistant.cpp
+/usr/share/doc/libgeographic-dev/examples/example-CassiniSoldner.cpp
+/usr/share/doc/libgeographic-dev/examples/example-CircularEngine.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Constants.cpp
+/usr/share/doc/libgeographic-dev/examples/example-DMS.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Ellipsoid.cpp
+/usr/share/doc/libgeographic-dev/examples/example-EllipticFunction.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GARS.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GeoCoords.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Geocentric.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Geodesic-small.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Geodesic.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GeodesicExact.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GeodesicLine.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GeodesicLineExact.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GeographicErr.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Geohash.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Geoid.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Georef.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Gnomonic.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GravityCircle.cpp
+/usr/share/doc/libgeographic-dev/examples/example-GravityModel.cpp
+/usr/share/doc/libgeographic-dev/examples/example-LambertConformalConic.cpp
+/usr/share/doc/libgeographic-dev/examples/example-LocalCartesian.cpp
+/usr/share/doc/libgeographic-dev/examples/example-MGRS.cpp
+/usr/share/doc/libgeographic-dev/examples/example-MagneticCircle.cpp
+/usr/share/doc/libgeographic-dev/examples/example-MagneticModel.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Math.cpp
+/usr/share/doc/libgeographic-dev/examples/example-NearestNeighbor.cpp.gz
+/usr/share/doc/libgeographic-dev/examples/example-NormalGravity.cpp
+/usr/share/doc/libgeographic-dev/examples/example-OSGB.cpp
+/usr/share/doc/libgeographic-dev/examples/example-PolarStereographic.cpp
+/usr/share/doc/libgeographic-dev/examples/example-PolygonArea.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Rhumb.cpp
+/usr/share/doc/libgeographic-dev/examples/example-RhumbLine.cpp
+/usr/share/doc/libgeographic-dev/examples/example-SphericalEngine.cpp
+/usr/share/doc/libgeographic-dev/examples/example-SphericalHarmonic.cpp
+/usr/share/doc/libgeographic-dev/examples/example-SphericalHarmonic1.cpp
+/usr/share/doc/libgeographic-dev/examples/example-SphericalHarmonic2.cpp
+/usr/share/doc/libgeographic-dev/examples/example-TransverseMercator.cpp
+/usr/share/doc/libgeographic-dev/examples/example-TransverseMercatorExact.cpp
+/usr/share/doc/libgeographic-dev/examples/example-UTMUPS.cpp
+/usr/share/doc/libgeographic-dev/examples/example-Utility.cpp
+/usr/share/doc/libgeographic-dev/examples/make-egmcof.cpp
+/usr/lib/x86_64-linux-gnu/libGeographic.so
+/usr/share/doc/libgeographic-dev/changelog.Debian.gz
+
+-----
+
+从 `dpkg -L libgeographic-dev` 的输出中，我们可以看到 `/usr/lib/x86_64-linux-gnu/libGeographic.so` 是实际存在的库文件，但没有 `libGeographic.so.19`。
+
+### 解决步骤：
+
+1. **确认实际库文件是否存在：**
+   - `/usr/lib/x86_64-linux-gnu/libGeographic.so` 是存在的库文件。
+   - 确保这个文件没有问题：
+     ```bash
+     ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so
+     ```
+
+这些步骤应该可以解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so` 的输出信息以便进一步诊断。
+
+--------
+
+sz@sz:~$ ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so
+
+rwxrwxrwx 1 root root 23 3月  24  2020 /usr/lib/x86_64-linux-gnu/libGeographic.so -> libGeographic.so.19.0.1
+
+--------
+
+从输出中可以看到 `/usr/lib/x86_64-linux-gnu/libGeographic.so` 实际上是一个符号链接，指向 `libGeographic.so.19.0.1`。这意味着 `libGeographic.so.19.0.1` 文件应该存在于 `/usr/lib/x86_64-linux-gnu/` 目录下，但没有单独的 `libGeographic.so.19` 符号链接。
+
+### 解决步骤
+
+1. **检查 `libGeographic.so.19.0.1` 文件是否存在**
+
+   确认实际库文件 `libGeographic.so.19.0.1` 是否存在：
+   ```bash
+   ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1
+   ```
+
+
+通过这些步骤，你应该能够解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1` 的输出信息以便进一步诊断。
+
+-----
+
+sz@sz:~$ ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1 ls: 无法访问 '/usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1': 没有那个文件或目录
+
+-----
+
+从输出信息可以确认，虽然有符号链接指向 `libGeographic.so.19.0.1`，但实际的文件不存在。这就是 `GeoConvert` 无法找到 `libGeographic.so.19` 的原因。
+
+1. **重新安装 `libgeographic` 库**
+   ```bash
+   sudo apt-get update
+   sudo apt-get install --reinstall libgeographic19 libgeographic-dev
+   ```
+
+2. **检查安装结果**
+   ```bash
+   ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so*
+   ```
+
+
+通过这些步骤，你应该能够解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so*` 的输出信息以便进一步诊断。
+
+----
+
+sz@sz:~$ ls -l /usr/lib/x86_64-linux-gnu/libGeographic.so*
+
+ lrwxrwxrwx 1 root root     23 3月  24  2020 /usr/lib/x86_64-linux-gnu/libGeographic.so -> libGeographic.so.19.0.1 lrwxrwxrwx 1 root root     23 3月  24  2020 /usr/lib/x86_64-linux-gnu/libGeographic.so.19 -> libGeographic.so.19.0.1 -rw-r--r-- 1 root root 705096 3月  24  2020 /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1
+
+----
+
+从输出中可以看到，`libGeographic.so.19.0.1` 文件确实存在，并且符号链接 `libGeographic.so` 和 `libGeographic.so.19` 都正确指向该文件。
+
+### 更新共享库缓存
+确保系统更新了共享库缓存：
+```bash
+sudo ldconfig
+```
+
+### 验证配置
+再次尝试运行 `GeoConvert` 命令来验证配置是否生效：
+```bash
+GeoConvert --version
+```
+
+结束
+
+----
+
+### 如果仍然报错
+
+如果仍然报错，请检查以下几点：
+
+1. **确保库路径被系统识别**
+   - 确认 `/usr/lib/x86_64-linux-gnu` 路径在系统的库路径中。编辑 `/etc/ld.so.conf` 文件（如果不存在，可以创建），确保其中包含这一行：
+     ```
+     /usr/lib/x86_64-linux-gnu
+     ```
+   - 运行 `ldconfig` 更新库缓存：
+     ```bash
+     sudo ldconfig
+     ```
+
+2. **检查库文件的权限**
+   - 确认库文件的权限是否正确：
+     ```bash
+     sudo chmod 755 /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1
+     ```
+
+### 验证 LD_LIBRARY_PATH
+
+你也可以临时设置 `LD_LIBRARY_PATH` 变量以确保库路径被识别：
+```bash
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+GeoConvert --version
+```
+
+### 示例步骤
+
+1. **更新共享库缓存**
+   ```bash
+   sudo ldconfig
+   ```
+
+2. **验证配置**
+   ```bash
+   GeoConvert --version
+   ```
+
+3. **确保库路径被系统识别**
+   - 编辑 `/etc/ld.so.conf` 文件，确保包含：
+     ```
+     /usr/lib/x86_64-linux-gnu
+     ```
+   - 更新库缓存：
+     ```bash
+     sudo ldconfig
+     ```
+
+4. **检查库文件的权限**
+   ```bash
+   sudo chmod 755 /usr/lib/x86_64-linux-gnu/libGeographic.so.19.0.1
+   ```
+
+5. **临时设置 `LD_LIBRARY_PATH` 变量**
+   ```bash
+   export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+   GeoConvert --version
+   ```
+
+通过这些步骤，你应该能够解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `GeoConvert --version` 的输出信息以便进一步诊断。
