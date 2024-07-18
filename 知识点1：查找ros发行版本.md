@@ -37,6 +37,8 @@ rosrun rc_override_node rc_override_node
 cd /home/nvidia/anaconda3/bin
  . ./activate
 conda activate yolo
+sudo vi usb_cam-test.launch unch
+roslaunch usb_cam usb_cam-test.launch
 roslaunch yolov5_ros yolov5.launch
 ```
 
@@ -147,6 +149,36 @@ python    python3
 ```
 
 opencv版本
+
+
+
+查看Ubuntu发行版本：
+
+```bash
+lsb_release -a
+```
+
+查看Linux内核以及位数
+
+```bash
+uname -a
+```
+
+## 清理日志以及无用包
+
+在/var/log/journal/垃圾日志文件占用比较大，可以通过如下命令来清除
+
+```bash
+journalctl --disk-usage # 检查日志大小 sudo journalctl --vacuum-time=1w # 只保留一周的日志 sudo journalctl --vacuum-size=500M # 只保留500MB的日志
+```
+
+清理升级缓存以及无用包
+
+```bash
+sudo apt-get autoclean # 删除旧版本软件缓存 sudo apt-get clean # 删除系统内所有软件缓存 sudo apt-get autoremove # 删除系统不再使用的孤立软件
+```
+
+## 
 
 
 
@@ -1994,6 +2026,7 @@ C-l清空屏幕
         
      # 使用会话名称
       tmux attach -t <session-name>
+     ```
 - 新建会话	
 
     ```bash

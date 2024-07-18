@@ -1705,6 +1705,13 @@ python detect.py --weights /content/yolov5/runs/train/exp2/weights/best.pt --img
 
 # 问题二十七：配置仿真环境运行.launch文件显示not found
 
+## 问题描述：Error info:
+/opt/ros/noetic/lib/robot_localization/navsat_transform_node: error while loading shared libraries: libGeographic.so.19: cannot open shared object file: No such file or directory
+log4cxx: Could not read configuration file [/home/zz/??????/cpp_project/LIO_SAM_ws/src/LIO-SAM/launch/include/rosconsole/rosconsole_error.conf].
+process[lio_sam_rviz-9]: started with pid [53535]
+[navsat-8] process has died [pid 53530, exit code 127, cmd /opt/ros/noetic/lib/robot_localization/navsat_transform_node imu/data:=imu_correct gps/fix:=gps/fix odometry/filtered:=odometry/navsat __name:=navsat __log:=/home/zz/.ros/log/a1ca73aa-332c-11ec-ba59-178e13b8db7e/navsat-8.log].
+log file: /home/zz/.ros/log/a1ca73aa-332c-11ec-ba59-178e13b8db7e/navsat-8*.log
+
 
 
 "符号连接的层数过多" 错误通常表示符号链接存在循环，导致系统在尝试访问文件时陷入无限循环。以下是解决这个问题的步骤：
@@ -2094,3 +2101,16 @@ GeoConvert --version
    ```
 
 通过这些步骤，你应该能够解决 `GeoConvert` 程序无法找到 `libGeographic.so.19` 库文件的问题。如果问题仍然存在，请提供 `GeoConvert --version` 的输出信息以便进一步诊断。
+
+
+
+# 问题
+
+**使用 conda 安装 `gdal`**： 使用 conda 来管理环境和依赖关系，避免与系统库冲突。首先创建一个新的 conda 环境，然后在该环境中安装 `gdal`。
+
+```
+conda install -c conda-forge gdal
+```
+
+
+
