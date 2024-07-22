@@ -31,7 +31,7 @@ rosrun rc_override_node rc_override_node
 
 
 
-## YOLO启动
+## YOLO启动	
 
 ```
 cd /home/nvidia/anaconda3/bin
@@ -2200,3 +2200,34 @@ sudo apt-get install p7zip-full
 file compressed_file_name
 
 这将输出文件的详细信息，包括它的格式，从而帮助你选择合适的解压命令。
+
+
+
+# 知识点二十五：tf
+
+![image-20240721142611065](/home/sz/.config/Typora/typora-user-images/image-20240721142611065.png)
+
+先运行rqt
+
+点Plugins，然后visualization然后tf
+
+```
+rosrun tf tf_echo frame_id child_frame_id
+```
+
+br = tf.TransformBroadcaster()   br.sendTransform(     
+
+ (msg.pose.position.x, msg.pose.position.y, msg.pose.position.z),  # 位置      (msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w),  # 方向     
+
+ rospy.Time.now(),  # 当前时间    
+
+  "base_link",  # 父坐标系      
+
+"standard_vtol_0"  # 子坐标系  
+
+ )  
+
+```
+rosrun tf static_transform_publisher 0 0 -0.16 -1.5708 0 3.1415 base_link rgb_camera_link 20
+```
+
