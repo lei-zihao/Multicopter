@@ -185,6 +185,15 @@ find . -type l -exec ls -l {} \;
 find . -name '[a-z][A-Z][0-9][0-9].doc'
 ```
 
+# 查找文件locate
+
+运行之前冼运行一下，来建立locate数据库。然后查找文件比如hello.tet。（若无updatedb这可能搜索不到文件）
+
+```
+updatedb
+locate hello.tet
+```
+
 
 
 # 查找历史记录history
@@ -296,6 +305,12 @@ gg	文件首行的行首
 GG	文件尾行的行首
 ```
 
+查找(/加字符串)
+
+```
+/
+```
+
 字符串替换
 
 ```
@@ -318,3 +333,141 @@ gv	重选上一次的高亮区
 选中后，按下J	将选中部分合并为一行
 选中后，按下r	将选中的部分的每个字符替换为新字符
 
+
+
+# PS：如何将 Vim 剪贴板里面的东西粘贴到 Vim 之外的地方
+
+### 问题描述
+
+在笔记本电脑上使用linux系统，经常打开并编辑一些文本文件，我比较喜欢用vim。但有时候遇到要从文件中拷贝几个数据到文件外(比如excel, 或者google spreadsheets)的时候，我就遇到麻烦了。在vim里面用**y**拷贝的东西，没法粘贴到文件外。因此我每次需要拷贝数据的时候，都是换gedit来操作。直到今天，我由于需要从三个文件中拷贝一共十八个数据，忍不了了。
+
+### 解决方法
+
+还好，已经有大佬帮我解决了这个\[问题\](如何将 Vim 剪贴板里面的东西粘贴到 Vim 之外的地方？ - cnlzxin的回答 - 知乎  
+[https://www.zhihu.com/question/19863631/answer/182346296)。](https://www.zhihu.com/question/19863631/answer/182346296)%E3%80%82)
+
+-   检查vim是否支持clipboard功能:
+    
+    <table><tbody><tr><td><pre><span>1</span><br></pre></td><td><pre><span>vim --version | grep clipboard</span><br></pre></td></tr></tbody></table>
+    
+-   如果有 **+clipboard** 则跳过这一步; 如果显示的是 **\-clipboard** 说明不支持(很遗憾，我的就是 **\-clipboard**), 需要
+    
+    ```
+    sudo apt install vim-gtk
+    ```
+
+安装好vim -gtk之后就可以了。复制内容到vim外了。不过在vim内复制内容时，需要制定将内容复制到 **clipboard**，通过 **“+** 来指定特定寄存器。
+
+### 例子
+
+当我想复制一个数据到spreadsheets时，使用**v**选中该数据内容，然后 **“+y**，切换到spreadsheets，**ctrl + v** 即可。想把剪切板的内容复制到另一个vim文件时，使用`"+p`即可。
+
+
+
+## 压缩与解压文件
+
+## 1.zip和unzip
+
+压缩
+
+将home下的文件压缩成hello.zip
+
+```
+zip -r hello.zip  /home/
+```
+
+解压缩
+
+将hello.zip解压缩到指定目录/opt/temp
+
+```
+unzip /home/hello.zip -d /opt/temp
+```
+
+## 2.tar
+
+```
+tar [选项] 文件名.tar.gz 源文件
+-c --create ：创建新的归档文件，即打包，打包的意思就是说把一堆文件打包成一个文件
+-x --extract ：解压文件
+-v --verbose ：可视化，显示详细的tar处理的文件信息的过程
+-f --file ：要操作的文件名
+-z --gzip, --gunzip, --ungzip ：通过 gzip 来进行归档压缩,如 tar -czvf etc.tar.gz /etc/,解压使用tar -zxvf test.tar.gz
+-j --bzip2 ：通过 bzip2 来归档压缩文件，如 tar -jcvf test.tar.bz2 /etc/,解压使用tar -jxvf test.tar.bz2
+-J :使用xz压缩工具压缩成.xz文件,如 tar -Jcvf test.tar.xz /etc/,解压使用tar -Jxvf test.tar.xz
+-t --list ：表示查看文件，查看文件中的文件内容
+-C --directory=DIR ：解压文件至指定的目录，如果是解压到当前目录，可以不加-C
+```
+
+压缩
+
+```
+#将dir1文件夹压缩成dir1.tar.gz
+tar -zcvf dir1.tar.gz dir1/
+#将dir1文件夹下所有的内容压缩成dir1.tar.gz
+tar -zcvf dir1.tar.gz dir1/*
+```
+
+
+解压缩
+
+```
+#将dir1.tar.gz解压到dir1_copy目录下（前提是要自己创建dir1_copy目录。若当前目录中存在目录dir1，会替换覆盖目录中的同名文件）
+tar -zxvf dir1.tar.gz -C dir1_copy/
+```
+
+# 文件所有者
+
+改变文件所有者（改为tom所有者）
+
+```
+chown tom hello.tet
+```
+
+改变文件所属组
+
+```
+groupadd fruit
+touch orange.tet(root创建为root组)
+chgrp fruit orange.tet
+```
+
+
+
+# 在终端替换字符串
+
+如果你是在命令行中直接替换字符串 `melody` 为 `noetic`，可以使用以下方法：
+
+### 1. 使用 `echo` 和 `sed`
+如果你有一个字符串，并希望在终端输出中将 `melody` 替换为 `noetic`，可以这样做：
+
+```bash
+echo "melody" | sed 's/melody/noetic/g'
+```
+
+这会输出替换后的字符串。
+
+![image-20240827133848277](/home/sz/.config/Typora/typora-user-images/image-20240827133848277.png)
+
+### 2. 使用参数替换（适用于变量）
+如果字符串存储在一个变量中，你可以直接在 Bash 中使用参数替换：
+
+```bash
+my_string="melody"
+new_string="${my_string/melody/noetic}"
+echo $new_string
+```
+
+这会将 `my_string` 中的 `melody` 替换为 `noetic` 并存储在 `new_string` 中。
+
+### 3. 历史命令替换
+如果你想在历史命令中替换 `melody` 为 `noetic`，你可以使用历史替换功能：
+
+```bash
+!!:s/melody/noetic/
+```
+
+- `!!` 表示上一个命令。
+- `:s/melody/noetic/` 表示将上一个命令中的 `melody` 替换为 `noetic`。
+
+这个命令将执行替换后的新命令。
