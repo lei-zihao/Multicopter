@@ -449,3 +449,48 @@ vector<int> a(b,b+6);    //从数组中获得初值，b[0]~b[5]
 3./cmd_pose_enu话题和/mavros/ setpoint_position/local话题控制位置区别:用第一个不能进入offfboard模式，用第二个可以进入。
 
 ![image-20240622201253099](C++学习记录.assets/image-20240622201253099.png)
+
+
+
+
+
+# 知识点五：类模版，命名空间
+
+## 在这段代码中，`square<double> test(x);` 是在 C++ 中创建一个类模板 `square` 的实例对象 `test`。以下是详细解释：
+
+### 1. **类模板 `square` 的定义**
+```cpp
+template <typename T>
+class square {
+public:
+    T a;
+    square(T _a) {
+        a = _a * _a;
+    }
+};
+```
+- 这里定义了一个类模板 `square`，其中 `T` 是一个模板参数，表示类型参数。`T` 可以是任何数据类型，如 `int`、`float`、`double` 等。
+- 类中有一个公共成员变量 `a`，类型为 `T`。
+- 构造函数 `square(T _a)` 接受一个类型为 `T` 的参数 `_a`，并将 `_a * _a` 的结果赋值给成员变量 `a`。
+
+### 2. **创建类模板的实例**
+```cpp
+square<double> test(x);
+```
+- `square<double>`：这里的 `square<double>` 表示将模板参数 `T` 指定为 `double` 类型，生成一个具体类型的类 `square<double>`。
+- `test(x)`：`test` 是一个 `square<double>` 类型的对象，`x` 作为参数传递给 `square<double>` 的构造函数。
+
+### 3. **工作原理**
+当你执行 `square<double> test(x);` 时，以下操作会发生：
+- 变量 `x` 被传递给 `square<double>` 类的构造函数。
+- 在构造函数中，`_a * _a` 被计算出来，结果赋值给 `a`。
+- 由于 `x` 是 `5.5`，`_a * _a` 的结果是 `5.5 * 5.5 = 30.25`。
+- 因此，`test.a` 的值为 `30.25`。
+
+### 4. **程序输出**
+```cpp
+std::cout << "the square of " << x << " is " << test.a << std::endl;
+```
+- 最后，程序输出 `the square of 5.5 is 30.25`，这表明 `test.a` 保存了 `x` 的平方值。
+
+综上所述，`square<double> test(x);` 创建了一个 `square` 类的 `double` 类型实例，计算并存储了 `x` 的平方值。
