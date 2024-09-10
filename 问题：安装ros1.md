@@ -2104,7 +2104,7 @@ GeoConvert --version
 
 
 
-# 问题
+# 问题二十八
 
 **使用 conda 安装 `gdal`**： 使用 conda 来管理环境和依赖关系，避免与系统库冲突。首先创建一个新的 conda 环境，然后在该环境中安装 `gdal`。
 
@@ -2113,4 +2113,39 @@ conda install -c conda-forge gdal
 ```
 
 
+
+# 问题二十九：在安装conda之前可以运行XTDrone的键盘控制无人机代码，安装conda后运行无人机键盘控制代码无反应，退出conda环境后运行又可以了
+
+## 问题描述：在conda环境中运行无人机键盘控制代码无反应
+
+![image-20240827130142191](/home/sz/.config/Typora/typora-user-images/image-20240827130142191.png)
+
+#### 问题分析：python环境不一样。在conda和本地环境运行communication无影响，但是在conda运行keyboard有影响，本地环境运行keyboard无影响。所以用本地环境的python来运行keyboard代码
+
+#### 解决方法一：
+
+先查找到本地环境中python的位置
+
+```
+conda deactivate
+which python
+```
+
+然后使用本地环境的python来运行代码
+
+```
+/usr/bin/python multirotor_keyboard_control.py iris 1 vel
+```
+
+#### ![image-20240827130349919](/home/sz/.config/Typora/typora-user-images/image-20240827130349919.png)
+
+## 解决方法二：取消conda的默认启动
+
+**打开终端。** **输入命令：**
+
+```
+conda config --set auto_activate_base false
+```
+
+ 这将把auto_activate_base参数设置为false，从而取消conda的默认启动
 
