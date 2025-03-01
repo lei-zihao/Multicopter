@@ -773,7 +773,7 @@ if (!offboard_flag) {
 
 2.保证发布目标位姿的频率不低于2hz
 
-即最好不用ros::duritio（10.0）.sleep()。通过添加一个bool类型的hovering变量来控制悬停。
+即最好不用ros::durition（10.0）.sleep()。通过添加一个bool类型的hovering变量来控制悬停。
 
 ```c++
 if ((abs(position[0]) < 0.2 && abs(position[1]) < 0.2 && abs(position[2] - HEIGHT) < 0.2))

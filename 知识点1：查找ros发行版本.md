@@ -2231,3 +2231,24 @@ br = tf.TransformBroadcaster()   br.sendTransform(
 rosrun tf static_transform_publisher 0 0 -0.16 -1.5708 0 3.1415 base_link rgb_camera_link 20
 ```
 
+
+
+# 知识点二十六：功能包的总结
+
+## cv_bridge
+
+`cv_bridge`是ROS中用于在ROS消息和OpenCV数据结构之间进行转换的包。
+
+在 OpenCV 中，`opencv_contrib` 是一个包含额外模块的库，用于扩展 OpenCV 主库没有包含的功能和工具。OpenCV 主库只包含一些最常用的计算机视觉算法，而 `opencv_contrib` 包含了额外的、实验性的、或者专用的功能模块。具体来说，`opencv_contrib3.3.1` 是与 OpenCV 3.3.1 版本对应的扩展模块集合，需要与 OpenCV 主库的相同版本配合使用。
+
+## opencv_contrib
+
+`opencv_contrib` 包含许多专用模块，例如：
+
+1. **面部识别**：`face` 模块支持人脸识别和人脸特征点检测。
+2. **结构化光**：`structured_light` 模块，用于结构化光扫描和 3D 重建。
+3. **文本检测和识别**：`text` 模块支持 OCR 和文字检测。
+4. **图像拼接**：`stitching` 模块用于全景图像拼接。
+5. **xfeatures2d**：包含一些高级的图像特征检测算法，如 SIFT、SURF 等（这些算法有时有专利限制）。
+
+在源码编译时，如果需要使用这些功能模块，就必须指定 `opencv_contrib` 的路径，并在 CMake 配置中启用相关选项。
