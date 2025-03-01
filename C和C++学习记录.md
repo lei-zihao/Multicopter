@@ -494,3 +494,129 @@ std::cout << "the square of " << x << " is " << test.a << std::endl;
 - 最后，程序输出 `the square of 5.5 is 30.25`，这表明 `test.a` 保存了 `x` 的平方值。
 
 综上所述，`square<double> test(x);` 创建了一个 `square` 类的 `double` 类型实例，计算并存储了 `x` 的平方值。
+
+
+
+
+
+# C的知识点一:static的使用
+
+在C语言中，`static`关键字有以下几个主要作用，取决于它的使用位置：
+
+### 1. **局部变量中的 `static`**：
+当 `static` 用于函数内部的局部变量时，该变量的**生命周期**从程序开始到结束，但它的**作用域**仍然是函数内部。也就是说，`static` 局部变量只会被初始化一次，之后即使函数被多次调用，它也会保留上一次函数调用时的值。
+
+**示例：**
+```c
+#include <stdio.h>
+
+void counter() {
+    static int count = 0; // 只初始化一次
+    count++;
+    printf("Count = %d\n", count);
+}
+
+int main() {
+    counter(); // 输出：Count = 1
+    counter(); // 输出：Count = 2
+    counter(); // 输出：Count = 3
+    return 0;
+}
+```
+
+在上面的例子中，`count`变量会在第一次调用 `counter()` 时初始化为0，之后每次调用都会保留它的值，而不会重新初始化。
+
+### 2. **全局变量中的 `static`**：
+当 `static` 用于全局变量时，该变量的作用域会被限制在**定义它的文件内部**，而不是整个程序。这意味着在其他文件中无法访问这个变量，即便通过 `extern` 关键字也无法引用。
+
+**示例：**
+```c
+// file1.c
+static int globalVar = 0; // 只能在file1.c中使用
+
+void modifyVar() {
+    globalVar++;
+}
+```
+
+在上面的例子中，`globalVar` 是一个静态全局变量，它只能在 `file1.c` 文件中使用，其他文件无法访问或修改它。
+
+### 3. **函数中的 `static`**：
+当 `static` 用于函数时，表示该函数的**作用域**被限制在定义它的文件中。也就是说，该函数无法在其他文件中调用，即使在其他文件中使用 `extern` 也无法引用这个函数。
+
+**示例：**
+```c
+// file1.c
+static void printMessage() {
+    printf("This is a static function.\n");
+}
+
+// file2.c
+// 无法调用file1.c中的printMessage函数
+```
+
+总结：
+- `static` 在局部变量中用于保持变量的值在函数调用之间不变。
+- `static` 在全局变量中用于限制变量的作用域，使其只在定义它的文件中可见。
+- `static` 用于函数时，限制函数的作用域为定义它的文件。
+
+
+
+# C语言知识点二：sprintf函数的使用
+
+`sprintf` 是 C 语言中的一个函数，用于将格式化的数据输出到字符串中。你可以使用 `sprintf` 将不同类型的数据格式化后存入一个字符数组中。它的工作方式与 `printf` 类似，只不过 `printf` 是将数据输出到控制台，而 `sprintf` 是将数据输出到字符串中。
+
+`sprintf` 的基本语法如下：
+
+```c
+int sprintf(char *str, const char *format, ...);
+```
+
+- `str`：存储格式化后的字符串的字符数组。
+- `format`：格式字符串，指定如何格式化后面的参数。
+- `...`：要格式化的数据，可以是多个参数。
+
+### 常见的格式说明符：
+- `%d`：整型数
+- `%f`：浮点数（默认保留6位小数）
+- `%.2f`：保留2位小数的浮点数
+- `%s`：字符串
+- `%c`：字符
+
+### 示例讲解：
+
+你提到的代码：
+```c
+sprintf(temp_str, "T=%.2f \n", temperature);
+```
+
+这段代码的含义是：
+1. 将浮点数 `temperature` 保留两位小数后，格式化成字符串，存入 `temp_str`。
+2. 格式化后的字符串是 `"T=XX.XX \n"`，其中 `XX.XX` 是温度值。
+
+### 具体解释：
+- `temp_str` 是一个字符数组，用来存储生成的字符串。
+- `"T=%.2f \n"` 这个格式字符串表示输出一个带两位小数的浮点数，并在末尾添加一个换行符。
+- `temperature` 是一个浮点数，它会根据格式说明符 `%.2f` 保留两位小数，并替换到字符串中的 `%.2f` 位置。
+
+### 完整示例：
+```c
+#include <stdio.h>
+
+int main() {
+    char temp_str[20];  // 存储格式化后的字符串
+    float temperature = 36.57;
+
+    sprintf(temp_str, "T=%.2f \n", temperature);
+
+    printf("%s", temp_str);  // 输出格式化后的字符串
+    return 0;
+}
+```
+
+输出结果：
+```
+T=36.57 
+```
+
+`sprintf` 函数不会像 `printf` 那样直接输出到控制台，而是将格式化的字符串存到 `temp_str` 中。
