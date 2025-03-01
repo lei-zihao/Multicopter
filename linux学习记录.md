@@ -471,3 +471,26 @@ echo $new_string
 - `:s/melody/noetic/` 表示将上一个命令中的 `melody` 替换为 `noetic`。
 
 这个命令将执行替换后的新命令。
+
+
+
+# Ubuntu软件操作的相关指令
+
+```
+sudo apt-cache show package 获取包的相关信息（如说明，大小，版本等）
+sudo apt-get install package --reinstall 重新安装包
+sudo apt-get remove package 删除安装包
+sudo apt-get source package 下载该安装包的源码
+
+```
+
+
+
+
+
+
+
+
+
+
+
