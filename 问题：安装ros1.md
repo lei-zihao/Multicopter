@@ -3,6 +3,7 @@
 # 问题1：安装ros1
 
 ## 自动安装ros：wget http://fishros.com/install -O fishros && . fishros。但是ros1安装不了？
+
 ![image-20231210171930505](C:\markdown\Typora\图片\image-20231210171930505.png)  
 
 [![image-20231210171930505.png](https://i.postimg.cc/y6fs4vK8/image-20231210171930505.png](https://postimg.cc/5jFZ85jh)[![image-20231210171930505.png](https://i.postimg.cc/y6fs4vK8/image-20231210171930505.png](https://postimg.cc/5jFZ85jh)
@@ -2149,3 +2150,230 @@ conda config --set auto_activate_base false
 
  这将把auto_activate_base参数设置为false，从而取消conda的默认启动
 
+
+
+# 问题三十：终结者Y7000P安装双系统后无WIFI图标。
+
+以下是针对你的情况，关于 **解决 Ubuntu 中 Realtek `rtw89` Wi-Fi 驱动缺失问题的详细解决方案**。你可以参考这个方案来处理类似的问题，或者将其用于文档记录。
+
+------
+
+## **Ubuntu 解决 Realtek `rtw89` Wi-Fi 驱动缺失问题**
+
+在安装并使用 Ubuntu 系统时，某些情况下，尤其是安装了 **Realtek RTL8852CE 网卡** 的笔记本电脑（如 Lenovo Legion Y7000P），会出现 **Wi-Fi 图标消失或无法连接 Wi-Fi** 的问题。这通常是因为系统没有加载正确的 Wi-Fi 驱动程序导致的。以下是解决该问题的详细步骤。
+
+### **1. 确认网卡识别情况**
+
+首先，使用以下命令确认网卡是否被系统识别：
+
+```bash
+lspci -nnk | grep -A3 -i network
+```
+
+输出应包含类似以下信息，表明系统已识别网卡：
+
+![image-20250306212453969](问题：安装ros1.assets/image-20250306212453969.png)
+
+```
+08:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. Device [10ec:c852] (rev 01)
+    Subsystem: Lenovo Device [17aa:5852]
+```
+
+这表明 **Realtek RTL8852CE 无线网卡** 被正确识别。
+
+------
+
+### **2. 确认缺少的驱动**
+
+如果 Wi-Fi 仍无法使用，可能是因为系统没有安装或加载所需的 `rtw89_8852ce` 驱动。使用以下命令查看当前驱动模块是否加载：
+
+```bash
+lsmod | grep rtw89
+```
+
+如果没有输出，表示驱动没有被加载。
+
+同时，可以使用以下命令查看系统日志中的错误信息：
+
+```bash
+dmesg | grep rtw
+```
+
+若发现类似 **"Direct firmware load for rtw89/rtw8852c_fw.bin failed"** 的错误，说明缺少相关驱动文件。
+
+成功例子：![image-20250306212526740](问题：安装ros1.assets/image-20250306212526740.png)
+
+------
+
+### **3. 更新系统和内核**
+
+`rtw89` 驱动通常支持 **5.15+** 内核版本，而 **Ubuntu 20.04** 默认提供的是 **5.4.0** 内核，这可能导致驱动不兼容。因此，首先需要更新系统和内核：
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install --install-recommends linux-generic-hwe-20.04
+sudo reboot
+```
+
+安装 **HWE 内核** 后，重启系统，检查内核版本是否成功更新：
+
+```bash
+uname -r
+```
+
+确保输出类似 **5.15+** 的内核版本。
+
+------
+
+### **4. 安装并编译 `rtw89` 驱动**
+
+接下来，下载并编译 **`rtw89` 驱动**：
+
+```bash
+sudo apt install build-essential dkms git
+git clone https://github.com/lwfinger/rtw89.git
+cd rtw89
+make clean
+make -j$(nproc)
+sudo make install
+```
+
+安装完成后，加载驱动：
+
+```bash
+sudo modprobe rtw89_8852ce
+```
+
+检查驱动是否成功加载：
+
+```bash
+lsmod | grep rtw89
+```
+
+如果显示 **rtw89_8852ce**，则 Wi-Fi 驱动加载成功。
+
+成功案例：![image-20250306212624329](问题：安装ros1.assets/image-20250306212624329.png)
+
+------
+
+### **5. 设置开机自动加载驱动**
+
+如果你在重启后发现 Wi-Fi 失效，需要让驱动在每次开机时自动加载：
+
+```bash
+echo "rtw89_8852ce" | sudo tee -a /etc/modules-load.d/rtw89.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+这样，驱动将在每次启动时自动加载。
+
+------
+
+### **6. 检查 Wi-Fi 状态**
+
+完成上述步骤后，使用以下命令确认 **Wi-Fi 是否恢复**：
+
+```bash
+nmcli device status
+```
+
+如果显示 Wi-Fi 设备（如 `wlan0`）并且处于连接状态，说明问题已经解决。
+
+![image-20250306212649860](问题：安装ros1.assets/image-20250306212649860.png)
+
+------
+
+### **总结**
+
+通过更新内核到 **5.15+**，并手动编译和安装 **`rtw89` 驱动**，可以解决大多数 **Realtek RTL8852CE 网卡** 在 Ubuntu 中无法连接 Wi-Fi 的问题。确保每次启动时驱动自动加载，能进一步提高系统稳定性和便捷性。
+
+如果你仍然遇到问题，请确保提供以下信息，以便进一步分析：
+
+```bash
+uname -r
+lsmod | grep rtw89
+nmcli device status
+dmesg | grep rtw
+```
+
+------
+
+这篇文档涵盖了从确认网卡到安装驱动的完整过程，适用于处理类似的 **Realtek Wi-Fi 驱动缺失** 问题。希望对你有帮助！
+
+
+
+```
+我的历史指令
+412  lspci -nnk | grep -A3 -i network
+  413  lsmod | grep rtw89
+  414  dmesg | grep rtw
+  415  sudo modprobe rtw89_8852ce
+  416  lsmod | grep rtw89
+  417  nmcli device status
+```
+
+以下是你提到的几个常用命令的介绍以及它们的作用：
+
+1. **`lspci -nnk | grep -A3 -i network`**
+
+- **`lspci`**：列出所有 PCI 总线设备，包括显卡、网卡、声卡等。
+- **`-nn`**：显示设备的详细信息，包括厂商 ID 和设备 ID。
+- **`-k`**：显示与设备关联的内核驱动程序。
+- **`grep -A3 -i network`**：使用 `grep` 搜索输出中与 "network" 相关的内容，并显示匹配行及其后 3 行（`-A3`）。这通常用来查看网卡设备信息。
+
+**作用**：该命令会列出网络相关的 PCI 设备，并显示它们的厂商 ID、设备 ID、使用的内核驱动程序等信息。比如你可以看到网卡的型号、驱动、以及是否加载了相关驱动。
+
+------
+
+2. **`lsmod | grep rtw89`**
+
+- **`lsmod`**：列出当前加载的内核模块（驱动程序）。
+- **`grep rtw89`**：通过 `grep` 筛选出与 `rtw89` 相关的模块。
+
+**作用**：检查 `rtw89` 无线网卡驱动是否已被加载到内核中。如果模块加载成功，应该能看到相关的 `rtw89_8852ce` 或其他与 `rtw89` 相关的模块。
+
+------
+
+3. **`dmesg | grep rtw`**
+
+- **`dmesg`**：显示内核日志缓冲区的内容，通常用于查看系统启动时的日志、硬件设备的初始化日志等。
+- **`grep rtw`**：通过 `grep` 筛选出包含 `rtw` 字符串的行。
+
+**作用**：查看与 `rtw`（通常表示 Realtek 无线驱动）相关的内核日志。这可以帮助你诊断硬件初始化、驱动加载或设备状态等问题。例如，如果驱动未加载，或者固件加载失败，这里会显示相关的错误信息。
+
+------
+
+4. **`sudo modprobe rtw89_8852ce`**
+
+- **`modprobe`**：用于加载或卸载内核模块（驱动程序）。这个命令不仅加载模块，还会处理模块依赖关系。
+- **`rtw89_8852ce`**：指定要加载的模块名称，在这里是 Realtek RTL8852CE 无线网卡驱动。
+
+**作用**：加载 `rtw89_8852ce` 驱动模块。如果你的网卡是 Realtek RTL8852CE，无线网卡驱动就会加载。如果驱动已成功安装但未自动加载，可以通过此命令手动加载它。
+
+------
+
+5. **`lsmod | grep rtw89`**
+
+这个命令与前面的 `lsmod | grep rtw89` 相同，作用也是查看 `rtw89` 驱动是否已经加载。
+
+------
+
+6. **`nmcli device status`**
+
+- **`nmcli`**：是 NetworkManager 命令行接口工具，用于管理网络连接。
+- **`device status`**：列出所有网络设备的状态（如 Wi-Fi、以太网等）。
+
+**作用**：查看当前网络设备（如有线、无线网卡）的状态，包括它们是否已连接到网络，以及连接的名称和状态信息。这有助于检查网络连接是否正常，并能够看到设备的详细连接状态。
+
+所以：
+
+这些命令用于以下几方面的操作：
+
+- 查看硬件设备信息，尤其是网络设备（`lspci`）。
+- 检查驱动模块是否加载成功（`lsmod`）。
+- 查看与网络驱动相关的内核日志，帮助诊断问题（`dmesg`）。
+- 手动加载无线网卡驱动模块（`modprobe`）。
+- 查看网络设备的状态，确认是否已连接或有其他问题（`nmcli`）。
+
+这些工具可以帮助你排查和解决 Ubuntu 中的网络驱动问题，尤其是无线网卡驱动。
