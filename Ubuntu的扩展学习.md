@@ -275,3 +275,241 @@ sudo apt-get install indicator-sysmonitor
 其他配置可以自由发挥~
 网速 :   {net}  CPU {cpu}  {cputemp}   |  MEM {mem}  |  SWAP {swap}  |  Net Speed Compact {netcomp}  |  Total Net Speed {totalnet}
 网速 :   {net}  | CPU : {cpu}  {cputemp}   |  MEM {mem}  |  SWAP {swap}  |  N SC {netcomp}  |  TNS {totalnet}
+
+
+
+# 扩展六：双系统启动流程以及删除Ubuntu系统
+
+双系统（如 Windows + Ubuntu）电脑的启动流程如下：
+
+### **1. BIOS/UEFI 初始化**（一般不会有问题）
+
+- 开机后，BIOS/UEFI 固件开始初始化硬件（CPU、内存、硬盘、显卡等）。
+- 查找启动设备（通常是硬盘或 SSD）。
+- 进入 Bootloader（引导程序）。
+
+### **2. Bootloader（引导程序）加载**
+
+- 你的电脑使用的是 **双系统（Windows + Ubuntu）**，一般会安装 **GRUB（GRand Unified Bootloader）** 作为引导程序。
+- GRUB 读取配置文件（如 `/boot/grub/grub.cfg`），列出可用的操作系统选项。
+
+### **3. 选择操作系统**
+
+- 你可以在 GRUB 界面选择启动 **Ubuntu** 或 **Windows**。
+- 如果不手动选择，GRUB 会在倒计时结束后默认启动预设的系统（可以在 `/etc/default/grub` 配置）。
+
+### **4. 加载操作系统内核**
+
+- 如果选择 Ubuntu：
+  - GRUB 加载 Linux 内核（`vmlinuz`），同时加载 initrd（初始 RAM 磁盘）。
+  - initrd 挂载根文件系统（`/`），然后启动 systemd，最终进入 Ubuntu 桌面环境。
+- 如果选择 Windows：
+  - GRUB 通过 `chainloader` 方式跳转到 Windows Boot Manager（`BOOTMGR`）。
+  - Windows Boot Manager 读取 BCD（Boot Configuration Data）配置。
+  - 加载 Windows 内核（`ntoskrnl.exe`），启动 Windows 系统。
+
+### **总结**
+
+1. **BIOS/UEFI** 初始化硬件，寻找启动设备。
+2. **GRUB** 作为主引导程序，提供系统选择菜单。
+3. 根据选择：
+   - 进入 Linux 内核，启动 Ubuntu。
+   - 进入 Windows Boot Manager，启动 Windows。
+
+我的 **Lenovo Legion Y7000P** 使用的是 **UEFI 模式**，所以 GRUB 可能是 **EFI GRUB**，它会从 EFI 分区（`/boot/efi/`）加载。
+
+
+
+## 问题一：Windows出现问题且要求在Windows中修改
+
+```
+则一般会涉及到这些指令
+bootrec /fixmbr 
+bootrec /fixboot
+bootrec /scanos
+bootrec /rebuildbcd 这是针对第几步
+```
+
+`bootrec` 命令主要用于修复 Windows 的 **MBR（主引导记录）** 和 **BCD（引导配置数据）**，通常用于修复 Windows 无法启动的问题。
+
+在双系统启动流程中，它们针对的是 **第 4 步**（**加载操作系统内核**），具体来说，它们用于修复 **Windows Boot Manager** 的问题。
+
+------
+
+ **bootrec 命令的作用**
+
+如果你的 **GRUB 破坏了 Windows 引导**，或者 **Windows 无法启动**，你可以在 **Windows 恢复模式** 或 **Windows 安装盘的命令提示符** 中运行这些命令。
+
+| 命令                  | 作用                                    | 适用场景                                                    |
+| --------------------- | --------------------------------------- | ----------------------------------------------------------- |
+| `bootrec /fixmbr`     | 修复 MBR（主引导记录），不会影响分区表  | 适用于 MBR 损坏导致 Windows 无法启动                        |
+| `bootrec /fixboot`    | 修复 Windows 的引导扇区                 | 适用于 Windows 引导扇区损坏（如 `BOOTMGR is missing` 错误） |
+| `bootrec /scanos`     | 扫描 Windows 系统安装位置               | 检测是否有 Windows 版本未被引导管理器识别                   |
+| `bootrec /rebuildbcd` | 重新构建 Windows 的 BCD（引导配置数据） | 适用于 BCD 记录丢失或损坏                                   |
+
+------
+
+ **在双系统中的应用**
+
+1. **如果 GRUB 被 Windows 覆盖**（比如你重装了 Windows），需要 **重装 GRUB**。
+2. **如果 Windows 无法引导**，可以用 `bootrec` 命令修复。
+
+**典型修复 Windows 引导的步骤**（如果 Windows 启动失败）：
+
+```bash
+bootrec /fixmbr
+bootrec /fixboot
+bootrec /scanos
+bootrec /rebuildbcd
+```
+
+如果 `bootrec /fixboot` 提示 **"Access is denied"**，可以先执行：
+
+```bash
+bcdboot C:\Windows /s C: /f ALL
+```
+
+如果你是想修复 **GRUB 引导 Ubuntu**，那 `bootrec` 命令是不适用的，需要使用 **Ubuntu LiveCD** 进入 `chroot` 修复 GRUB。
+
+## 问题二：Ubuntu出现问题，要求在Ubuntu中处理并删除Ubuntu系统（针对Windows设置了管理员密码问题采用Ubuntu处理）
+
+如果你仍然能进入 Ubuntu，并且想要 **在 Ubuntu 里删除 Ubuntu 并恢复 Windows 启动**，可以使用以下方法。
+
+------
+
+ **方法 1：使用 Ubuntu 删除 Ubuntu 分区并恢复 GRUB**
+
+如果你想 **彻底删除 Ubuntu**，但又是在 **Ubuntu 里进行操作**，可以按照以下步骤：
+
+ **1. 备份重要数据**
+
+在删除 Ubuntu 之前，确保你已经备份了重要文件，因为这将永久删除 Ubuntu 及其数据。
+
+ **2. 进入 Ubuntu，使用 fdisk/gparted 删除分区**
+
+1. **打开终端**（`Ctrl + Alt + T`），运行：
+
+   ```bash
+   sudo fdisk -l
+   ```
+
+   找到你的 Ubuntu 分区（通常是 `/dev/sdaX` 或 `/dev/nvme0n1pX`，格式为 **ext4**）。
+
+2. **使用 `fdisk` 或 `gparted` 删除 Ubuntu 分区**：
+
+   ```bash
+   sudo fdisk /dev/sdX  # 例如 /dev/sda 或 /dev/nvme0n1
+   ```
+
+   - 输入 `p` 列出分区。
+   - 输入 `d` 删除 Ubuntu 相关分区（如 root `/` 和 swap）。
+   - 输入 `w` 写入更改并退出。
+
+   或者你可以使用 **GParted**（图形界面工具）：
+
+   ```bash
+   sudo apt install gparted
+   sudo gparted
+   ```
+
+   - 右键 Ubuntu 分区 → **删除** → **应用更改**。
+
+------
+
+ **3. 修复 GRUB 并设为 Windows 默认**
+
+现在 Ubuntu 分区已经删除了，但 GRUB 可能仍然存在。你需要修改 GRUB 以直接引导 Windows，或者完全移除 GRUB。
+
+ **方案 1：修改 GRUB 让 Windows 成为默认系统**
+
+如果你仍想保留 GRUB，可以修改 `/etc/default/grub` 让 Windows 启动项排在第一位：
+
+```bash
+sudo nano /etc/default/grub
+```
+
+找到：
+
+```bash
+GRUB_DEFAULT=0
+```
+
+改成：
+
+```bash
+GRUB_DEFAULT=saved
+GRUB_SAVEDEFAULT=true
+```
+
+然后运行：
+
+```bash
+sudo update-grub
+```
+
+重启后，GRUB 会默认进入 Windows。
+
+------
+
+**方案 2：彻底删除 GRUB 并恢复 Windows 启动**（我的选择）
+
+如果你想 **彻底移除 GRUB 并让 Windows 直接启动**，你可以用以下方式恢复 Windows 的引导：
+
+1. **在 Ubuntu 里安装 `efibootmgr`（如果未安装）**：
+
+   ```bash
+   sudo apt install efibootmgr
+   ```
+
+2. **列出 UEFI 启动项**：
+
+   ```bash
+   sudo efibootmgr
+   ```
+
+   找到类似 `Boot000x* ubuntu` 的条目。
+
+3. **删除 Ubuntu 引导项**：
+
+   ```bash
+   sudo efibootmgr -b 000x -B  # 这里的 "000x" 是上一步找到的 Ubuntu 引导项编号
+   ```
+
+4. **将 Windows 设为默认启动**：
+
+   ```bash
+   sudo efibootmgr -o 000y
+   ```
+
+   其中 `000y` 是 Windows Boot Manager 的编号（通常是 `Boot0000` 或 `Boot0001`）。
+
+5. **（可选）删除 Ubuntu 的 EFI 目录**： 如果你想清理 Ubuntu 的引导文件，可以挂载 EFI 分区并删除 `ubuntu` 目录：
+
+   ```bash
+   sudo mount /dev/sdXY /mnt  # 例如 EFI 可能在 /dev/sda1
+   sudo rm -rf /mnt/EFI/ubuntu
+   sudo umount /mnt
+   ```
+
+6. **重启**，你的系统应该直接进入 Windows。
+
+------
+
+ **4. 进入 Windows 扩展分区（可选）**
+
+如果你删除了 Ubuntu 分区，Windows 可能会显示未分配的磁盘空间。你可以：
+
+- **进入 Windows** → `Win + R` → `diskmgmt.msc`
+- 右键 C 盘 → **扩展卷** → **使用未分配空间**。
+
+------
+
+## **问题二总结**
+
+| 方法                              | 适用场景                          |
+| --------------------------------- | --------------------------------- |
+| **修改 GRUB 默认启动项**          | 想保留 GRUB，但默认进入 Windows   |
+| **删除 GRUB 并恢复 Windows 引导** | 完全移除 Ubuntu，Windows 直接启动 |
+| **删除 Ubuntu 分区**              | 释放磁盘空间供 Windows 使用       |
+
+这样，你就可以在 Ubuntu 里完成 Ubuntu 的删除，并让 Windows 恢复正常启动！
