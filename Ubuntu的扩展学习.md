@@ -139,7 +139,7 @@ Ethernet adapter VirtualBox Host-Only Network:
 
 
 
-## 扩展四、Ubuntu常用命令
+# 扩展四、Ubuntu常用命令
 
 ```
 # Ctrl+Alt+T 打开新的终端
@@ -237,7 +237,7 @@ top
 
 
 
-
+# 扩展五.实时显示当前的CPU，GPU，温度（工具--七）
 
 一、添加indicator-sysmonitor的下载源
 sudo add-apt-repository ppa:fossfreedom/indicator-sysmonitor -y
