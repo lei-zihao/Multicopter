@@ -111,6 +111,104 @@ PX4CtrlFSM::PX4CtrlFSM(Parameter_t &param_, LinearControl &controller_) : param(
 
 
 
+**拷贝构造函数**
+
+```
+class Entity
+{
+private:
+String m_Name;
+public:
+Entity():m_Name("Unknown"){}   //构造函数
+Entity(const String&name):m_Name(name){}//拷贝构造函数
+const String&GetName()const return m_Name;
+}
+
+Entity entity=Entity（“Cherno”）；
+和下面的一样
+Entity entity（“Cherno”）；
+```
+
+
+
+```c++
+#include <iostream>
+ 
+using namespace std;
+ 
+class Line
+{
+   public:
+      int getLength( void );
+      Line( int len );             // 简单的构造函数
+      Line( const Line &obj);      // 拷贝构造函数
+      ~Line();                     // 析构函数
+ 
+   private:
+      int *ptr;
+};
+ 
+// 成员函数定义，包括构造函数
+Line::Line(int len)
+{
+    cout << "调用构造函数" << endl;
+    // 为指针分配内存
+    ptr = new int;
+    *ptr = len;
+}
+ 
+Line::Line(const Line &obj)
+{
+    cout << "调用拷贝构造函数并为指针 ptr 分配内存" << endl;
+    ptr = new int;
+    *ptr = *obj.ptr; // 拷贝值
+}
+ 
+Line::~Line(void)
+{
+    cout << "释放内存" << endl;
+    delete ptr;
+}
+int Line::getLength( void )
+{
+    return *ptr;
+}
+ 
+void display(Line obj)
+{
+   cout << "line 大小 : " << obj.getLength() <<endl;
+}
+ 
+// 程序的主函数
+int main( )
+{
+   Line line1(10);
+ 
+   Line line2 = line1; // 这里也调用了拷贝构造函数
+ 
+   display(line1);
+   display(line2);
+ 
+   return 0;
+}
+```
+
+```
+输出：：：：：
+调用构造函数
+调用拷贝构造函数并为指针 ptr 分配内存
+调用拷贝构造函数并为指针 ptr 分配内存
+line 大小 : 10
+释放内存
+调用拷贝构造函数并为指针 ptr 分配内存
+line 大小 : 10
+释放内存
+释放内存
+释放内存
+```
+
+![image-20250414000129237](C和C++学习记录.assets/image-20250414000129237.png)
+
 
 
 # 知识点二：param参数服务器
@@ -438,7 +536,13 @@ vector<int> a(b,b+6);    //从数组中获得初值，b[0]~b[5]
 
 
 
+**对vertices优化**，提前告诉编辑器vertices有三个空间，这样pushback时就只调用三次拷贝构造函数。若不一开始给编辑器说空间为三则会调用拷贝构造函数次数为（1+2+3=6次）（vector动态增加，第一次添加时vertices大小为1，第二次添加时vertices大小为2，第三次就为3了，所以为6次）
 
+![image-20250414202609464](C和C++学习记录.assets/image-20250414202609464.png)
+
+**继续优化**：换为emplaceback，因此要传入初始化参数列表，他将帮忙创建一个vertices类，不会拷贝，即不会调用拷贝构造函数
+
+![image-20250414203028430](C和C++学习记录.assets/image-20250414203028430.png)
 
 # 知识点四：让无人机进入offboard模式
 
@@ -494,6 +598,240 @@ std::cout << "the square of " << x << " is " << test.a << std::endl;
 - 最后，程序输出 `the square of 5.5 is 30.25`，这表明 `test.a` 保存了 `x` 的平方值。
 
 综上所述，`square<double> test(x);` 创建了一个 `square` 类的 `double` 类型实例，计算并存储了 `x` 的平方值。
+
+
+
+# 知识点六：const在变量和函数不同位置时的不同作用
+
+在C++中，`const`关键字用于限定变量和函数行为的不变性，但它的具体含义会根据出现的位置而有所不同。以下是一些常见场景的说明：
+
+1. **变量声明中的`const`**
+
+   - **常量变量：**
+
+     ```cpp
+     const int a = 10;
+     ```
+
+     表示`a`的值在初始化后不可更改。
+
+   - **指针和数组：**
+
+     - `const int* p`（或`int const* p`）：指针`p`指向的内容不可修改，但指针本身可以改变；
+     - `int* const p`：指针`p`本身为常量，即指向地址不能改变，但指向内容可修改；
+     - `const int* const p`：指针和指针指向的数据都不能修改。
+
+2. **函数参数中的`const`**
+
+   - **传值参数：**
+     对基本数据类型（如`int`、`double`等），即使加了`const`修饰也只是告诉函数内部不修改参数的值，但调用者传参时并不会受到影响，因为传值时会产生拷贝。
+
+     ```cpp
+     void func(const int x);
+     ```
+
+   - **引用和指针参数：**
+     当传递对象时，为了避免不必要的拷贝且保证参数不会被修改，通常会使用`const`引用或`const`指针。
+
+     ```cpp
+     void func(const std::string& str);
+     void func(const int* p);
+     ```
+
+     这样既能提高效率，也能保证函数不会意外修改传入的数据。
+
+3. **函数返回值中的`const`**
+
+   - **返回值为常量：**
+     为防止调用者修改返回的对象，可以在返回类型前加`const`。如返回一个常量引用或常量指针：
+
+     ```cpp
+     const std::string& getName();
+     const int* getData();
+     ```
+
+     注意，对内置类型或拷贝返回值加`const`意义较小，更多用于防止误用返回对象的某些操作。
+
+4. **成员函数中的`const`**
+
+   - 在类成员函数声明后添加`const`，表示该函数不会修改对象的任何非`mutable`成员变量。
+
+     ```cpp
+     class MyClass {
+     public:
+         int getValue() const;  // 保证不会修改成员变量
+     };
+     ```
+
+     这不仅是对调用者的一种承诺，也允许在`const`对象上调用该函数。
+
+总结来说，`const`通过限制变量和函数行为，可以保证数据的安全性和程序的正确性，其不同位置的语法规则（例如作用于指针、引用、函数参数或成员函数）赋予了程序员细粒度的控制能力，从而帮助预防意外修改数据以及提高代码的可读性和可维护性。
+
+**举例说明**
+
+下面将针对C++中`const`在不同位置的使用分别举例说明，帮助理解它们各自的含义和效果。
+
+------
+
+1. 变量声明中的 `const`
+
+- **常量变量**
+  声明后值不可修改，常用于定义不变的量。
+
+  ```cpp
+  const int a = 10;
+  // a = 20; // 编译错误，无法修改
+  ```
+
+- **指针与`const`的组合**
+
+  1. **指向常量的指针**
+     指针指向的内容不可修改，但指针本身可以指向其他地址。
+
+     ```cpp
+     const int val1 = 100;
+     int val2 = 200;
+     const int* ptr1 = &val1;
+     // *ptr1 = 150; // 编译错误，不能修改指向的值
+     ptr1 = &val2;  // 合法，指针可以重新指向另一个变量
+     ```
+
+  2. **常量指针**
+     指针本身不可修改，即不能指向其他地址，但指向的内容可以修改（若该内容本身允许修改）。
+
+     ```cpp
+     int var1 = 50;
+     int var2 = 60;
+     int* const ptr2 = &var1;
+     *ptr2 = 55;   // 合法，修改了var1的值
+     // ptr2 = &var2; // 编译错误，不能改变指针的指向
+     ```
+
+  3. **指向常量的常量指针**
+     指针本身和指针指向的内容均不可修改。
+
+     ```cpp
+     const int var3 = 500;
+     const int* const ptr3 = &var3;
+     // *ptr3 = 600; // 编译错误，不能修改值
+     // ptr3 = &var3; // 编译错误，不能改变指针指向
+     ```
+
+------
+
+2. 函数参数中的 `const`
+
+- **传值参数中的`const`**
+  对于传值参数，`const`限定符在函数内部保证参数不会被意外修改，但调用者依旧传递的是拷贝。
+
+  ```cpp
+  void funcByValue(const int x) {
+      // x = 20; // 试图修改x会导致编译错误
+  }
+  // 注意：调用函数时传入的参数本身不会受影响
+  ```
+
+- **引用参数中的`const`**
+  使用引用传递（避免拷贝开销）且保证函数内不修改传入的数据。
+
+  ```cpp
+  void funcByConstRef(const std::string& str) {
+      // str += "abc"; // 编译错误，不能修改str
+  }
+  ```
+
+- **指针参数中的`const`**
+
+  1. 传递指针地址且不允许函数修改指向的数据
+
+     ```cpp
+     void funcByConstPtr(const int* p) {
+         // *p = 10; // 编译错误，不能修改指针指向的数据
+     }
+     ```
+
+  2. 传递常量指针（允许修改指向的数据，但不允许改变指针指向）
+
+     ```cpp
+     void funcByPtr(int* const p) {
+         *p = 10;  // 合法，修改了指针指向的数据
+         // p = nullptr; // 编译错误，不能改变p的指向
+     }
+     ```
+
+------
+
+3. 函数返回值中的 `const`
+
+- **返回值为常量引用或常量指针**
+  这种用法可以防止调用者对返回的对象进行修改。如果返回值是局部对象则需要注意生命周期问题。
+
+  - 返回常量引用（通常用于类成员或全局静态对象）：
+
+    ```cpp
+    class MyClass {
+    private:
+        std::string name;
+    public:
+        const std::string& getName() const {
+            return name;  // 返回引用，不允许修改
+        }
+    };
+    ```
+
+  - 返回指向常量数据的指针：
+
+    ```cpp
+    const int* getConstData() {
+        static const int data = 42;
+        return &data;  // 返回指向常量的指针
+    }
+    ```
+
+------
+
+4. 成员函数中的 `const`
+
+- **成员函数后加`const`**
+  用于表示该成员函数不会修改对象的状态（除了被`mutable`修饰的成员），这对于保证类接口的纯读操作非常重要。
+
+  ```cpp
+  class Point {
+  private:
+      int x, y;
+  public:
+      Point(int _x, int _y) : x(_x), y(_y) {}
+  
+      // 保证不修改成员变量
+      int getX() const {
+          return x;
+      }
+  
+      // 如果尝试在const成员函数中修改成员变量，将会导致编译错误
+      // void setX(int _x) const {
+      //     x = _x; // 编译错误
+      // }
+  };
+  ```
+
+------
+
+通过这些例子可以看到，`const`在不同的上下文中有着不同的作用：
+
+- 在变量声明中，它能将数据设为只读；
+- 在函数参数中，它能保护传入的数据不会被函数修改；
+- 在函数返回值中，它帮助传递只读数据；
+- 在成员函数中，它保证函数调用不会修改对象状态。
+
+这样灵活而细致的控制，有助于开发出更安全、更稳定和更易维护的C++程序。
+
+
+
+# 知识点七：new
+
+![image-20250414002614277](C和C++学习记录.assets/image-20250414002614277.png)
+
+# ![image-20250414002825466](C和C++学习记录.assets/image-20250414002825466.png)
 
 
 
@@ -620,3 +958,6 @@ T=36.57
 ```
 
 `sprintf` 函数不会像 `printf` 那样直接输出到控制台，而是将格式化的字符串存到 `temp_str` 中。
+
+
+
