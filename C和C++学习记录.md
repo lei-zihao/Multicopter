@@ -908,6 +908,184 @@ struct Base{
 
 ![image-20250423201902885](C和C++学习记录.assets/image-20250423201902885.png)
 
+# 知识点九：boost：：bind函数的使用
+
+背景：下面这一行代码将 ROS 订阅到的消息，绑定到 `fsm.cmd_data` 对象的成员函数 `feed`：
+
+```cpp
+ros::Subscriber cmd_sub =
+  nh.subscribe<quadrotor_msgs::PositionCommand>(
+    "cmd",                    // 话题名
+    100,                      // 队列长度
+    boost::bind(
+      &Command_Data_t::feed,  // （1）成员函数指针
+      &fsm.cmd_data,          // （2）要调用该成员函数的对象实例地址
+      _1                      // （3）占位符：表示将把订阅到的消息作为第 1 个参数传入
+    ),
+    ros::VoidConstPtr(),
+    ros::TransportHints().tcpNoDelay()
+  );
+```
+
+作用：这样就无需写全局函数或静态函数，把消息直接传给某个类的成员方法，实现代码结构清晰、职责分离。
+
+------
+
+boost::bind 语法拆解
+
+```cpp
+boost::bind(&Command_Data_t::feed, &fsm.cmd_data, _1)
+```
+
+1. **`&Command_Data_t::feed`**
+    这是类 `Command_Data_t` 的成员函数指针，指向函数
+
+   ```cpp
+   void Command_Data_t::feed(const quadrotor_msgs::PositionCommand::ConstPtr& msg);
+   ```
+
+2. **`&fsm.cmd_data`**
+    `fsm` 是某个状态机对象，其成员 `cmd_data` 类型为 `Command_Data_t`。取它的地址，就把这个具体实例“绑”到上面那个成员函数指针上。
+
+3. **`_1`**
+    Boost 提供的占位符，表示“把调用者传来的第 1 个参数传给 `feed` 的第 1 个参数”。在 ROS 中，订阅回调会传入一个消息指针，这个指针就会映射到 `_1`。
+
+------
+
+执行流程
+
+1. 当有新消息发布到 `"cmd"` 话题时，ROS 会内部调用这个绑定后的可调用对象（functor），并把消息指针当作参数传入。
+
+2. 绑定对象接收到该指针后，最终执行：
+
+   ```cpp
+   fsm.cmd_data.feed(msg_ptr);
+   ```
+
+这样就无需写全局函数或静态函数，把消息直接传给某个类的成员方法，实现代码结构清晰、职责分离。
+
+------
+
+通用形式
+
+如果有任意类成员函数要绑定，模式都是：
+
+```cpp
+boost::bind(&ClassName::method,    // 成员函数指针
+            object_ptr_or_ref,     // 调用该函数的对象
+            _1, _2, …);            // 占位符，对应函数参数
+```
+
+你也可以同时绑定常量参数：
+
+```cpp
+boost::bind(&MyClass::foo, &obj, 5, _1);
+// 每次调用时，foo(5, incoming_msg) 会被执行
+```
+
+------
+
+与 std::bind 的对比
+
+C++11 起也可用标准库：
+
+```cpp
+using std::placeholders::_1;
+…
+nh.subscribe<…>(
+  "cmd", 100,
+  std::bind(&Command_Data_t::feed, &fsm.cmd_data, _1),
+  …
+);
+```
+
+两者功能相同，只是 ROS 生态里历史上大量使用 Boost.Function/Boost.Bind，因此你经常会看到 `boost::bind`。
+
+# 知识点十：成员函数与普通函数
+
+在 C++ 里，“普通函数指针” 和 “成员函数指针” 是两种不同的类型，语法和语义都不一样。下面分几方面说明，帮助理解为什么写成 `&Command_Data_t::feed` 而不是直接写 `Command_Data_t::feed`。
+
+------
+
+1. 普通函数 vs 成员函数
+
+- **普通函数**（free function）比如
+
+  ```cpp
+  void foo(int);
+  ```
+
+  它的名字 `foo` 在大多数上下文里会退化（decay）成一个指向该函数的指针，类型是 `void(*)(int)`。此时写 `foo` 就相当于取地址，写 `&foo` 也是一样，二者等价。
+
+- **成员函数**（member function）属于某个类，签名上隐含了一个额外的 `this` 指针：
+
+  ```cpp
+  struct A {
+    void bar(int);
+  };
+  ```
+
+  `bar` 的类型并不是 `void(*)(A*,int)`（普通函数指针），而是**成员函数指针**： `void (A::*)(int)`。它需要记录“这是哪个类的成员”这个信息，编译器内部处理也不同。
+
+------
+
+2. 语法要求：必须带类作用域和取址符
+
+C++ 标准规定：
+
+- 成员函数指针必须写成 `&类名::成员函数名` 的形式，编译器才能识别这是在取“指向成员函数”的地址。
+- 如果你写单独的 `Command_Data_t::feed`，这不是一个完整的表达式，编译器不知道你是要取地址还是调用它，因而会报错。
+
+举例对比：
+
+| 写法                    | 含义                                                | 是否正确      |
+| ----------------------- | --------------------------------------------------- | ------------- |
+| `&Command_Data_t::feed` | 取成员函数指针，类型 `void (Command_Data_t::*)(… )` | 正确          |
+| `Command_Data_t::feed`  | 语法不完整，编译错误                                | 错误          |
+| `&feed`（若在类外）     | 寻找全局函数 `feed`，不是成员函数                   | 错误/不符类型 |
+
+------
+
+3. 为什么普通函数可以省略 `&`，成员函数不行
+
+- 对于普通函数，C++ 有一个“函数名自动转换为函数指针”的规则（function-to-pointer decay），写 `foo` 会自动当作 `&foo`。
+- **但这个自动转换不适用于成员函数指针**。成员函数指针没有 decay 规则，必须显式写 `&Class::method`。
+
+------
+
+4. 调用成员函数指针
+
+拿到 `void (Command_Data_t::*pmf)(const MsgPtr&) = &Command_Data_t::feed;` 之后，你还需要通过对象来调用它：
+
+```cpp
+Command_Data_t obj;
+(auto ptr = pmf; )  // 指向成员函数的指针
+(obj.*ptr)(msg_ptr); // 通过 .* 语法在 obj 上调用
+// 或者
+Command_Data_t* p = &obj;
+(p->*ptr)(msg_ptr);  // 通过 ->* 语法在 p 所指对象上调用
+```
+
+`boost::bind(&Command_Data_t::feed, &fsm.cmd_data, _1)` 就是把这步骤都封装好了：
+
+- `&Command_Data_t::feed` 拿到成员函数指针
+- `&fsm.cmd_data` 指定调用对象
+- `_1` 指定运行时传进来的参数
+
+------
+
+**小结**
+
+1. **成员函数指针类型与普通函数指针不同**，没有自动 decay 机制。
+2. 标准语法要求“取成员函数指针”时必须写 `&Class::method`。
+3. `boost::bind` 接受的正是这种 `void (Class::*)(…)` 类型指针，才能内部完成 `object->*method(args…)` 的调用。
+
+因此在 ROS 回调里，你看见的 `boost::bind(&Command_Data_t::feed, &fsm.cmd_data, _1)`，`&Command_Data_t::feed` 是必需且正确的写法。
+
+
+
+
+
 # C的知识点一:static的使用
 
 在C语言中，`static`关键字有以下几个主要作用，取决于它的使用位置：
