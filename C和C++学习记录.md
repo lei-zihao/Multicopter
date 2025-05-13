@@ -1001,7 +1001,7 @@ nh.subscribe<…>(
 
 两者功能相同，只是 ROS 生态里历史上大量使用 Boost.Function/Boost.Bind，因此你经常会看到 `boost::bind`。
 
-# 知识点十：成员函数与普通函数
+# 知识点十：成员函数与普通函数指针
 
 在 C++ 里，“普通函数指针” 和 “成员函数指针” 是两种不同的类型，语法和语义都不一样。下面分几方面说明，帮助理解为什么写成 `&Command_Data_t::feed` 而不是直接写 `Command_Data_t::feed`。
 
