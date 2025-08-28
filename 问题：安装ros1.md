@@ -1,4 +1,4 @@
-<<<<<<< Updated upstream
+
 
 # 问题1：安装ros1
 
@@ -2377,3 +2377,17 @@ dmesg | grep rtw
 - 查看网络设备的状态，确认是否已连接或有其他问题（`nmcli`）。
 
 这些工具可以帮助你排查和解决 Ubuntu 中的网络驱动问题，尤其是无线网卡驱动。
+
+# 问题三十一：XTDrone无法解锁
+
+问题描述：仿真出现 FCU: Preflight Fail: Accel #0 uncalibrated等错误
+
+解决方案：
+
+其实也不止这种错误，只要你发现仿真后，出现各种飞控初始化数据类型的报错（其他例子FCU: Preflight Fail: Baro Sensor #0 missing；takeoff altitude low …)。那我们都可以尝试输入下列命令，见电脑存储的仿真参数清空。然后我们再重新启动仿真，那么大概率问题就解决了。
+
+```
+rm ~/.ros/eeprom/parameters*
+rm -rf ~/.ros/sitl*
+```
+

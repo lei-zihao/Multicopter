@@ -42,7 +42,50 @@ roslaunch usb_cam usb_cam-test.launch
 roslaunch yolov5_ros yolov5.launch
 ```
 
+```
+roslaunch yolov5_ros yolov5_d435.launch
+roslaunch realsense2_camera rs_camera.launch
+rostopic echo /yolov5/detections 
+```
 
+```
+训练：
+数据集结构;
+sz@sz-Legion:~/文档/data_set/traffic-cone-image-dataset-main/cone_train_data$ tree -L 1
+.
+├── images
+├── labels
+└── labels.cache
+
+2 directories, 1 file
+sz@sz-Legion:~/文档/data_set/traffic-cone-image-dataset-main/cone_train_data$ tree -L 2
+.
+├── images
+│   ├── 100.jpg
+│   ├── 101.jpg
+│   ├── 102.jpg
+│   ├── 103.jpg
+│   ├── 104.jpg
+│   ├── 105.jpg
+│   ├── 106.jpg
+│   ├── 107.jpg
+yaml文件内容：（提供数据集位置）
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: /home/sz/下载/zuixing  # dataset root dir
+train: images/train/  
+val: images/val/  
+
+# Classes
+names:
+  0: cone
+  1: cylinder
+  
+  
+训练代码
+sz@sz-Legion:~/yolo_ros/src/yolov5_ros/src/yolov5$ python3.8 train.py --img 640 --batch-size 16 --epochs 100 --data /home/sz/文档/data_set/traffic-cone-image-dataset-main/cone_data.yaml --weights yolov5s.pt --nosave --cache
+```
+
+![image-20250702171046366](/mnt/windows_c/Users/leizi/Documents/GitHub/Multicopter/%E7%9F%A5%E8%AF%86%E7%82%B91%EF%BC%9A%E6%9F%A5%E6%89%BEros%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC.assets/image-20250702171046366.png)
 
 ## vins定点飞
 
@@ -96,7 +139,11 @@ setpoint.launch内容如下 参数 height 是设置无人机飞正方形的高�
 
 
 
+启动激光雷达
 
+```
+
+```
 
 
 
