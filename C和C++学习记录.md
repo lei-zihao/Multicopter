@@ -1,3 +1,95 @@
+# 字符串 string s="dog cat cat dog"
+
+- **分割字符串**  string s="dog cat cat dog"
+
+使用split函数
+
+```
+String[] list  = s.split(" ");
+
+// 点号 . 在正则表达式中是特殊字符
+String s = "192.168.1.1";
+String[] parts = s.split("\\.");  // 需要转义
+// 结果：["192", "168", "1", "1"]
+```
+
+- **赋值**取子串
+
+```
+string ss=s.substr(1,5) //从位置1开始，长度为5
+```
+
+- **大小写比较**
+
+```
+tolower(s[left]) == tolower(s[right])
+```
+
+- 判断是不是**字母或数字**
+
+```cpp
+isalnum()
+```
+
+|         函数         |     功能     |          示例           |
+| :------------------: | :----------: | :---------------------: |
+| `length()`, `size()` |   获取长度   |       `s.size()`        |
+|      `empty()`       |   是否为空   |       `s.empty()`       |
+|      `clear()`       |  清空字符串  |       `s.clear()`       |
+|      `append()`      |     追加     |    `s.append("abc")`    |
+|    `push_back()`     |   追加字符   |   `s.push_back('c')`    |
+|      `insert()`      |     插入     |  `s.insert(3, "xyz")`   |
+|      `erase()`       |     删除     |     `s.erase(0, 5)`     |
+|     `replace()`      |     替换     | `s.replace(0, 2, "AB")` |
+|      `substr()`      |   获取子串   |    `s.substr(0, 5)`     |
+|       `find()`       |   查找子串   |     `s.find("abc")`     |
+|      `rfind()`       |   反向查找   |    `s.rfind("abc")`     |
+|     `compare()`      |     比较     |   `s.compare("abc")`    |
+|      `c_str()`       | C风格字符串  |       `s.c_str()`       |
+|  `stoi()`, `stod()`  | 字符串转数值 |      `stoi("123")`      |
+|    `to_string()`     | 数值转字符串 |    `to_string(123)`     |
+
+# 哈希表 **unordered_set**  
+
+**unordered_set 主要函数总结**
+
+|       函数       | 功能     | 时间复杂度 |         返回值         |
+| :--------------: | :------- | :--------- | :--------------------: |
+|    `insert()`    | 插入元素 | 平均 O(1)  | `pair<iterator, bool>` |
+|   `emplace()`    | 原地构造 | 平均 O(1)  | `pair<iterator, bool>` |
+|    `erase()`     | 删除元素 | 平均 O(1)  |     删除的元素数量     |
+|     `find()`     | 查找元素 | 平均 O(1)  |     迭代器或 end()     |
+|    `count()`     | 统计元素 | 平均 O(1)  |         0 或 1         |
+|   `contains()`   | 检查存在 | 平均 O(1)  |          bool          |
+|     `size()`     | 元素数量 | O(1)       |         size_t         |
+|    `empty()`     | 是否为空 | O(1)       |          bool          |
+|    `clear()`     | 清空集合 | O(n)       |          void          |
+|   `reserve()`    | 预留空间 | O(n)       |          void          |
+| `bucket_count()` | 桶数量   | O(1)       |         size_t         |
+| `load_factor()`  | 负载因子 | O(1)       |         float          |
+
+**unordered_map 主要函数总结**
+
+## **主要函数总结**
+
+|     函数     |         功能         |  时间复杂度   |
+| :----------: | :------------------: | :-----------: |
+| `operator[]` |    访问/插入元素     |   平均 O(1)   |
+|  **`at()`**  | **访问元素（安全）** | **平均 O(1)** |
+|  `insert()`  |       插入元素       |   平均 O(1)   |
+| `emplace()`  |     原地构造插入     |   平均 O(1)   |
+|  `erase()`   |       删除元素       |   平均 O(1)   |
+|   `find()`   |       查找元素       |   平均 O(1)   |
+|  `count()`   |     统计key数量      |   平均 O(1)   |
+| `contains()` |     检查是否存在     |   平均 O(1)   |
+|   `size()`   |       元素数量       |     O(1)      |
+|  `empty()`   |       是否为空       |     O(1)      |
+|  `clear()`   |     清空所有元素     |     O(n)      |
+| `reserve()`  |       预留空间       |     O(n)      |
+|  `rehash()`  |       重新哈希       |     O(n)      |
+
+# 数组 vector
+
 # 知识点一：构造函数
 
 ## 带参数的构造函数（官方示例在一个文件中）
